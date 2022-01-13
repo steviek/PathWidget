@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">Departures widget for PATH</string>
+    <string name="welcome_message">Welcome to the Departure widget for PATH App!</string>
+    <string name="loading">Loading…</string>
+    <string name="updated_at_x">Updated at %1$s</string>
+    <string name="choose_stations_configuration">Choose the stations to display in the widget</string>
+    <string name="confirm">Confirm</string>
+    <string name="refresh">Refresh</string>
+    <string name="no_internet">No internet</string>
+    <string name="failed_to_update">Failed to update</string>
+    <string name="add_widget">Add widget</string>
+    <string name="widget_description">Display the upcoming departure times for PATH trains</string>
+    <string name="closest_station">The closest station (requires location access)</string>
+    <string name="and_or">and/or</string>
+    <string name="credit">This app is possible thanks to the free PATH Data API by Matthew Razza</string>
+    <string name="report_problem">Report a problem</string>
+</resources>

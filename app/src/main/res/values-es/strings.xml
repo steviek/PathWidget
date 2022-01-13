@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">Widget de trenes PATH</string>
+    <string name="welcome_message">¡Bienvenidos a la app del widget de las salidas de los trenes PATH!</string>
+    <string name="loading">Cargando…</string>
+    <string name="updated_at_x">Se actualizó a las %1$s</string>
+    <string name="choose_stations_configuration">Elegir las estaciones de mostrar en el widget</string>
+    <string name="confirm">Confirmar</string>
+    <string name="refresh">Recargar</string>
+    <string name="no_internet">Sin Internet</string>
+    <string name="failed_to_update">Un error se encontró</string>
+    <string name="add_widget">Agregar el widget</string>
+    <string name="widget_description">Mostrar las salidas de los trenes PATH</string>
+    <string name="closest_station">La estación más cercana (require acceso a la ubicación)</string>
+    <string name="and_or">y/o</string>
+    <string name="credit">Esta app es posible gracias al API libre de Matthew Razza</string>
+    <string name="report_problem">Informar sobre un problema</string>
+</resources>

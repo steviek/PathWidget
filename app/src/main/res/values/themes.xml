@@ -1,0 +1,27 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <style name="Glance.AppWidget.Theme" parent="Theme.Path"/>
+
+    <!-- Base application theme. -->
+    <style name="Theme.Path" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
+        <!-- Primary brand color-v31. -->
+        <item name="colorPrimary">@color/path_blue_500</item>
+        <item name="colorPrimaryVariant">@color/path_blue_700</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <!-- Secondary brand color-v31. -->
+        <item name="colorSecondary">@color/path_blue_200</item>
+        <item name="colorSecondaryVariant">@color/path_blue_700</item>
+        <item name="colorOnSecondary">@color/black</item>
+        <!-- Status bar color-v31. -->
+        <item name="android:statusBarColor" tools:targetApi="l">?attr/colorPrimaryVariant</item>
+        <!-- Customize your theme here. -->
+    </style>
+
+    <style name="Theme.Path.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <style name="Theme.Path.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+
+    <style name="Theme.Path.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+</resources>
