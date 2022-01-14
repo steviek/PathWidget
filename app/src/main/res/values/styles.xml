@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Glance.AppWidget.List" parent="">
+    <style name="BaseWidgetListStyle">
         <item name="android:scrollbars">none</item>
     </style>
+    <style name="Glance.AppWidget.List" parent="BaseWidgetListStyle"/>
     <style name="Glance.AppWidget.Text" parent="">
         <item name="android:ellipsize">end</item>
     </style>
