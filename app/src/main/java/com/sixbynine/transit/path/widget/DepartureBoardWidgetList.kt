@@ -76,6 +76,7 @@ fun StationDepartures(data: LoadedWidgetData, station: Station) {
       text = station.displayName,
       fontSize = 18.sp,
       modifier = GlanceModifier.padding(bottom = 8.dp),
+      maxLines = 1
     )
     val trainsByHeadsign = allTrains.groupBy { it.headsign }
     trainsByHeadsign.values.sortedBy { it.map { train -> train.projectedArrival }.minOrNull()!! }

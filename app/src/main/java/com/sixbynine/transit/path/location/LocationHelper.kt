@@ -34,7 +34,7 @@ fun hasLocationPermission(): Boolean {
       application.checkSelfPermission(ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
 }
 
-suspend fun tryToGetLocation(): LocationCheckResult {
+suspend fun tryToGetLocation(timeout: Duration): LocationCheckResult {
   if (
     VERSION.SDK_INT >= 23 &&
     application.checkSelfPermission(ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
@@ -56,7 +56,7 @@ suspend fun tryToGetLocation(): LocationCheckResult {
   }
 
   return try {
-    withTimeout(1.seconds.toMillis()) {
+    withTimeout(timeout.toMillis()) {
       Success(locationManager.getCurrentLocation(provider))
     }
   } catch (e: TimeoutCancellationException) {

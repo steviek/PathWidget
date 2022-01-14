@@ -11,6 +11,7 @@ import androidx.glance.state.PreferencesGlanceStateDefinition
 import com.sixbynine.transit.path.PathWidgetApplication
 import com.sixbynine.transit.path.application
 import com.sixbynine.transit.path.backend.TrainDataManager
+import com.sixbynine.transit.path.ktx.seconds
 import com.sixbynine.transit.path.location.LocationCheckResult.Failure
 import com.sixbynine.transit.path.location.LocationCheckResult.NoPermission
 import com.sixbynine.transit.path.location.LocationCheckResult.NoProvider
@@ -55,19 +56,24 @@ object DepartureBoardWidgetDataManager {
 
   private suspend fun updateDataInner() {
     var useClosestStation = false
+    var isInitialDataLoad = false
     val stationsToCheck = mutableSetOf<String>()
     // Update the widget with the loading indicator, which will re-render the widget with the
     // progress bar spinning while we load the data.
     updateEachWidget { previousData ->
+      isInitialDataLoad = previousData?.loadedData == null
       useClosestStation = previousData?.useClosestStation == true
       stationsToCheck += previousData?.fixedStations ?: emptySet()
+      // Check for the station that was closest last time, in case we fail to get location below.
+      previousData?.loadedData?.closestStation?.let(stationsToCheck::add)
       previousData?.copy(isLoading = true) ?: DepartureBoardWidgetData(isLoading = true)
     }
 
     // Try to get the user's location if they chose the closest station option.
     var closestStationName: String? = null
     if (useClosestStation) {
-      val locationResult = tryToGetLocation()
+      val locationResult =
+        tryToGetLocation(timeout = if (isInitialDataLoad) 1.seconds else 3.seconds)
       logDebug("Location was retrieved as $locationResult")
       when (locationResult) {
         is Failure -> {}
