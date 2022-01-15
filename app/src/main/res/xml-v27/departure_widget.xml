@@ -6,5 +6,9 @@
     android:updatePeriodMillis="1800000"
     android:initialLayout="@layout/widget_loading"
     android:resizeMode="horizontal|vertical"
+    android:configure="com.sixbynine.transit.path.widget.configuration.DepartureBoardWidgetConfigurationActivity"
+    android:description="@string/widget_description"
     android:previewImage="@drawable/widget_preview"
-    android:widgetCategory="home_screen"/>
+    android:previewLayout="@layout/widget_preview"
+    android:widgetCategory="home_screen"
+    android:widgetFeatures="reconfigurable"/>

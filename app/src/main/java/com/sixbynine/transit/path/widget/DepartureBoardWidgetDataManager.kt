@@ -162,7 +162,7 @@ object DepartureBoardWidgetDataManager {
     val ids = getGlanceIds()
     logDebug("updateEachWidget: $ids")
     ids.forEach { id ->
-      updateWidget(id, function)
+      updateWidget(id, true, function)
     }
   }
 
@@ -177,6 +177,7 @@ object DepartureBoardWidgetDataManager {
   /** Update the stored data for the widget with [id], and update its UI. */
   suspend fun updateWidget(
     id: GlanceId,
+    doUpdate: Boolean = true,
     function: (DepartureBoardWidgetData?) -> DepartureBoardWidgetData
   ) {
     logDebug("update widget: $id")
@@ -187,7 +188,9 @@ object DepartureBoardWidgetDataManager {
           this[DEPARTURE_WIDGET_PREFS_KEY] = JsonFormat.encodeToString(function(previousData))
         }
     }
-    DepartureBoardWidget().update(context, id)
+    if (doUpdate) {
+      DepartureBoardWidget().update(context, id)
+    }
   }
 
   private val isOnline: Boolean

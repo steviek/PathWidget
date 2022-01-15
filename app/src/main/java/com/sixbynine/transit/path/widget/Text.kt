@@ -16,7 +16,8 @@ fun PrimaryText(
   text: String,
   fontSize: TextUnit,
   maxLines: Int = Int.MAX_VALUE,
-  modifier: GlanceModifier = GlanceModifier
+  modifier: GlanceModifier = GlanceModifier,
+  textAlign: TextAlign? = null,
 ) {
   Text(
     text = text,
@@ -24,6 +25,7 @@ fun PrimaryText(
       fontSize = fontSize,
       fontWeight = FontWeight.Bold,
       color = ColorProvider(color.widget_text_primary),
+      textAlign = textAlign
     ),
     maxLines = maxLines,
     modifier = modifier,

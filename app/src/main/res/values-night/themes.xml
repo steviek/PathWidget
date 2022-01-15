@@ -9,6 +9,7 @@
         <item name="colorSecondary">@color/path_blue_200</item>
         <item name="colorSecondaryVariant">@color/path_blue_200</item>
         <item name="colorOnSecondary">@color/black</item>
+        <item name="colorAccent">@color/path_blue_200</item>
         <!-- Status bar color-v31. -->
         <item name="android:statusBarColor" tools:targetApi="l">?attr/colorPrimaryVariant</item>
         <!-- Customize your theme here. -->

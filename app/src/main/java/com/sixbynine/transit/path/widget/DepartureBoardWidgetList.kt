@@ -6,7 +6,6 @@ import android.os.Build.VERSION
 import androidx.annotation.ColorInt
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Color.Companion
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.*
@@ -31,8 +30,10 @@ import com.sixbynine.transit.path.util.logDebug
 @Composable
 fun DepartureList(data: DepartureBoardWidgetData, modifier: GlanceModifier) {
   LazyColumn(modifier = modifier) {
-    item {
-      Spacer(modifier = GlanceModifier.height(8.dp))
+    if (VERSION.SDK_INT >= 31) {
+      item {
+        Spacer(modifier = GlanceModifier.height(16.dp))
+      }
     }
 
     checkNotNull(data.loadedData)
@@ -68,7 +69,7 @@ fun StationDepartures(data: LoadedWidgetData, station: Station) {
     data.stationToTrains.filterKeys { it.apiName == station.apiName }.flatMap { it.value }
   Column(
     modifier = GlanceModifier
-      .padding(horizontal = 8.dp)
+      .padding(horizontal = 16.dp)
       .background(color.widget_background)
       .fillMaxWidth()
   ) {
@@ -95,16 +96,18 @@ fun StationDepartures(data: LoadedWidgetData, station: Station) {
               Spacer(modifier = GlanceModifier.height(18.dp).width(1.dp))
             }
 
+            Spacer(modifier = GlanceModifier.height(4.dp))
+
             val times =
               trains
                 .map { it.projectedArrival }
                 .sorted()
                 .joinToString(separator = ", ") { formatLocalTime(it) }
             SecondaryText(text = times, fontSize = 14.sp)
+            Spacer(modifier = GlanceModifier.height(8.dp))
           }
         }
       }
-    Spacer(modifier = GlanceModifier.height(8.dp))
   }
 }
 
@@ -152,66 +155,5 @@ fun ColorBox(@ColorInt firstColor: Int?, @ColorInt secondColor: Int? = null) {
         .fillMaxSize()
         .visibility(if (useSingleColor) Visible else Gone)
     )
-  }
-}
-
-@Composable
-fun UpdatedFooter(data: DepartureBoardWidgetData) {
-  require(data.loadedData != null)
-  require(data.lastRefresh != null)
-
-  Row(
-    horizontalAlignment = Alignment.CenterHorizontally,
-    verticalAlignment = Alignment.CenterVertically,
-    modifier = GlanceModifier.fillMaxWidth().height(48.dp)
-  ) {
-    Spacer(modifier = GlanceModifier.height(48.dp).width(32.dp))
-    Spacer(modifier = GlanceModifier.defaultWeight().height(1.dp))
-    val updatedAtText = when {
-      !data.lastRefresh.wasSuccess && !data.lastRefresh.hadInternet -> {
-        getString(R.string.no_internet)
-      }
-      !data.lastRefresh.wasSuccess -> getString(R.string.failed_to_update)
-      LocalSize.current == SmallWidgetSize -> formatLocalTime(data.loadedData.updateTime)
-      else -> getString(R.string.updated_at_x, formatLocalTime(data.loadedData.updateTime))
-    }
-    SecondaryText(
-      text = updatedAtText,
-      fontSize = 12.sp,
-      textStyle = TextStyle(textAlign = TextAlign.Center)
-    )
-    Spacer(modifier = GlanceModifier.defaultWeight().height(1.dp))
-    Box(
-      modifier = GlanceModifier.height(48.dp).width(32.dp),
-      contentAlignment = Alignment.Center
-    ) {
-      val isLoading = data.isLoading
-      Image(
-        modifier = GlanceModifier
-          .size(48.dp)
-          .clickable(actionRunCallback<ClickFooterAction>())
-          .visibility(if (isLoading) Gone else Visible),
-        provider = ImageProvider(R.drawable.selectable_item_background_borderless),
-        contentDescription = getString(R.string.refresh)
-      )
-      Image(
-        modifier = GlanceModifier.size(24.dp).visibility(if (isLoading) Gone else Visible),
-        provider = ImageProvider(R.drawable.ic_refresh),
-        contentDescription = null
-      )
-      // The arrow makes the refresh circle relatively smaller than the progress bar, but it looks
-      // really good if I can get them to align.
-      ProgressBar(
-        modifier = GlanceModifier.size(20.dp).visibility(if (isLoading) Visible else Gone)
-      )
-    }
-
-    Spacer(modifier = GlanceModifier.width(8.dp).height(48.dp))
-  }
-}
-
-class ClickFooterAction : ActionCallback {
-  override suspend fun onRun(context: Context, glanceId: GlanceId, parameters: ActionParameters) {
-    DepartureBoardWidgetDataManager.updateData()
   }
 }

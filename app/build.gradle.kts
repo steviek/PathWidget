@@ -16,15 +16,15 @@ android {
     applicationId = "com.sixbynine.transit.path"
     minSdkVersion(21)
     targetSdkVersion(30)
-    versionCode = 5
-    versionName = "2022.01.14"
+    versionCode = 7
+    versionName = "2022.01.15"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
 
   buildTypes {
     getByName("release") {
-      isMinifyEnabled = false
+      isMinifyEnabled = true
       proguardFiles(getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro")
     }
   }

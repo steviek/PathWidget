@@ -11,6 +11,7 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="widget_background">@android:color/white</color>
+    <color name="widget_accent_color">@color/path_blue_500</color>
     <color name="widget_text_primary">@android:color/black</color>
     <color name="widget_text_secondary">@android:color/darker_gray</color>
 </resources>

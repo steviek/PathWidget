@@ -57,7 +57,7 @@ class DepartureBoardWidgetConfigurationViewModel : ViewModel() {
       return@launch
     }
 
-    DepartureBoardWidgetDataManager.updateWidget(glanceId) { previousData ->
+    DepartureBoardWidgetDataManager.updateWidget(glanceId, false) { previousData ->
       when (previousData) {
         null -> DepartureBoardWidgetData(
           fixedStations = stations,

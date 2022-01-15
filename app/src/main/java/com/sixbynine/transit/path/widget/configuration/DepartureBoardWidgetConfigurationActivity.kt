@@ -66,8 +66,18 @@ class DepartureBoardWidgetConfigurationActivity : AppCompatActivity() {
         }
       }
 
+    loadDataAndComposeContent()
+  }
+
+  override fun onNewIntent(intent: Intent?) {
+    super.onNewIntent(intent)
+    loadDataAndComposeContent()
+  }
+
+  private fun loadDataAndComposeContent() {
     // Load the previously configured data for the widget to cover the reconfiguration case.
     val viewModel: DepartureBoardWidgetConfigurationViewModel by viewModels()
+    viewModel.previousData.removeObservers(this)
     viewModel.previousData.observe(this) {
       previousData = it
       composeContent()

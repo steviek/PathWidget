@@ -14,4 +14,6 @@
     <string name="and_or">y/o</string>
     <string name="credit">Esta app es posible gracias al API libre de Matthew Razza</string>
     <string name="report_problem">Informar sobre un problema</string>
+    <string name="complete_widget_setup">Finalizer el arreglo del widget</string>
+    <string name="edit">Configurar</string>
 </resources>

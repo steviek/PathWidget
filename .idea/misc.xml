@@ -7,10 +7,17 @@
         <entry key="../../../../../layout/compose-model-1641781498367.xml" value="0.375" />
         <entry key="../../../../../layout/compose-model-1641877173550.xml" value="0.21138211382113822" />
         <entry key="../../../../../layout/custom_preview.xml" value="0.1" />
+        <entry key="app/src/main/res/drawable/click_ripple.xml" value="0.1" />
         <entry key="app/src/main/res/drawable/half_triangle.xml" value="0.25" />
+        <entry key="app/src/main/res/drawable/ic_edit.xml" value="0.1287037037037037" />
+        <entry key="app/src/main/res/drawable/ic_edit_inset.xml" value="0.1287037037037037" />
         <entry key="app/src/main/res/drawable/ic_launcher_foreground.xml" value="0.13020833333333334" />
         <entry key="app/src/main/res/drawable/ic_refresh.xml" value="0.11302083333333333" />
+        <entry key="app/src/main/res/drawable/rectangle.xml" value="0.1287037037037037" />
+        <entry key="app/src/main/res/drawable/ripple_rect.xml" value="0.1" />
+        <entry key="app/src/main/res/drawable/selectable_item_background.xml" value="0.13020833333333334" />
         <entry key="app/src/main/res/drawable/selectable_item_background_borderless.xml" value="0.11302083333333333" />
+        <entry key="app/src/main/res/drawable/widget_background.xml" value="0.1287037037037037" />
         <entry key="app/src/main/res/layout/progress_bar.xml" value="0.1" />
         <entry key="app/src/main/res/layout/widget_loading.xml" value="0.165" />
         <entry key="app/src/main/res/layout/widget_preview.xml" value="0.2802056555269923" />

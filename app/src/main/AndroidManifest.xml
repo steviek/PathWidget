@@ -29,7 +29,8 @@
             android:name=".widget.configuration.DepartureBoardWidgetConfigurationActivity"
             android:exported="false"
             android:label="@string/app_name"
-            android:theme="@style/Theme.Path.NoActionBar">
+            android:theme="@style/Theme.Path.NoActionBar"
+            android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE"/>
             </intent-filter>

@@ -109,7 +109,6 @@ class MainActivity : AppCompatActivity() {
       /* extra= */ null,
       /* successCallback= */ configurationPendingIntent
     )
-    finish()
   }
 
   private fun openPathApiGithub() {
