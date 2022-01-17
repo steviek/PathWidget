@@ -35,13 +35,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.sixbynine.transit.path.R
-import com.sixbynine.transit.path.location.hasLocationPermission
+import com.sixbynine.transit.path.permission.PermissionHelper
 import com.sixbynine.transit.path.station.StationLister
 import com.sixbynine.transit.path.ui.theme.PathTheme
 import com.sixbynine.transit.path.widget.DepartureBoardWidgetData
 import com.sixbynine.transit.path.widget.StationByDisplayNameComparator
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class DepartureBoardWidgetConfigurationActivity : AppCompatActivity() {
+
+  @Inject lateinit var stationLister: StationLister
+  @Inject lateinit var permissionHelper: PermissionHelper
+
+  private val viewModel: DepartureBoardWidgetConfigurationViewModel by viewModels()
 
   private var wasPermissionRequestRejected = false
   private var previousData: DepartureBoardWidgetData? = null
@@ -76,7 +84,6 @@ class DepartureBoardWidgetConfigurationActivity : AppCompatActivity() {
 
   private fun loadDataAndComposeContent() {
     // Load the previously configured data for the widget to cover the reconfiguration case.
-    val viewModel: DepartureBoardWidgetConfigurationViewModel by viewModels()
     viewModel.previousData.removeObservers(this)
     viewModel.previousData.observe(this) {
       previousData = it
@@ -122,7 +129,7 @@ class DepartureBoardWidgetConfigurationActivity : AppCompatActivity() {
           )
 
           var selectedStations by remember { mutableStateOf(emptySet<String>()) }
-          StationLister
+          stationLister
             .getStations()
             .distinctBy { it.apiName }
             .sortedWith(StationByDisplayNameComparator)
@@ -172,7 +179,6 @@ class DepartureBoardWidgetConfigurationActivity : AppCompatActivity() {
   }
 
   private fun confirmWidgetUpdate(stations: Set<String>, useClosestStation: Boolean) {
-    val viewModel: DepartureBoardWidgetConfigurationViewModel by viewModels()
     viewModel.configurationComplete.observe(this) { isComplete ->
       if (!isComplete) return@observe
       // If the configuration completed, then we can confirm that the widget is set up.
@@ -188,8 +194,8 @@ class DepartureBoardWidgetConfigurationActivity : AppCompatActivity() {
     if (VERSION.SDK_INT < 23) {
       return
     }
-    if (hasLocationPermission()) return
+    if (permissionHelper.hasLocationPermission()) return
 
-    locationPermissionRequest.launch(arrayOf(ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION))
+    locationPermissionRequest.launch(permissionHelper.locationPermissions)
   }
 }

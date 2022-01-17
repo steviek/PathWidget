@@ -2,23 +2,28 @@ package com.sixbynine.transit.path.station
 
 import android.content.Context
 import android.content.SharedPreferences
-import com.sixbynine.transit.path.PathWidgetApplication
 import com.sixbynine.transit.path.api.Coordinates
 import com.sixbynine.transit.path.api.Station
-import com.sixbynine.transit.path.application
 import com.sixbynine.transit.path.backend.TrainDataManager
 import com.sixbynine.transit.path.ktx.hours
 import com.sixbynine.transit.path.serialization.JsonFormat
 import com.sixbynine.transit.path.time.BootTimestamp
+import com.sixbynine.transit.path.time.BootTimestampProvider
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
+import javax.inject.Inject
 
-object StationLister {
+class StationLister @Inject internal constructor(
+  @ApplicationContext private val context: Context,
+  private val trainDataManager: TrainDataManager,
+  private val bootTimestampProvider: BootTimestampProvider
+){
   private val prefs: SharedPreferences
-    get() = application.getSharedPreferences("stations", Context.MODE_PRIVATE)
+    get() = context.getSharedPreferences("stations", Context.MODE_PRIVATE)
 
   fun getStations(): List<Station> {
     val savedData =
@@ -29,7 +34,7 @@ object StationLister {
       return DefaultStations
     }
 
-    val age = savedData.timestamp.getAge()
+    val age = savedData.timestamp.getAge(bootTimestampProvider.now())
     if (age == null || age > 24.hours) {
       // Fetch stations from the API at most once a day.
       updateInBackground()
@@ -54,8 +59,8 @@ object StationLister {
    * that is fine, as this is low priority.
    */
   private fun updateInBackground() = GlobalScope.launch {
-    TrainDataManager().getStations().getOrNull()?.let { stations ->
-      val savedData = SavedStations(stations, BootTimestamp.now())
+    trainDataManager.getStations().getOrNull()?.let { stations ->
+      val savedData = SavedStations(stations, bootTimestampProvider.now())
       prefs.edit().putString(PrefsKey, JsonFormat.encodeToString(savedData)).apply()
     }
   }

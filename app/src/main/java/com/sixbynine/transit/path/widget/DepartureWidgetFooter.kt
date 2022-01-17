@@ -11,6 +11,7 @@ import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.Image
 import androidx.glance.ImageProvider
+import androidx.glance.LocalContext
 import androidx.glance.LocalGlanceId
 import androidx.glance.LocalSize
 import androidx.glance.Visibility.Gone
@@ -35,7 +36,12 @@ import androidx.glance.visibility
 import com.sixbynine.transit.path.R.drawable
 import com.sixbynine.transit.path.R.string
 import com.sixbynine.transit.path.ktx.drawableBackground
-import com.sixbynine.transit.path.time.formatLocalTime
+import com.sixbynine.transit.path.time.DateTimeFormatter
+import com.sixbynine.transit.path.time.DateTimeFormatter.Companion
+import dagger.hilt.EntryPoint
+import dagger.hilt.EntryPoints
+import dagger.hilt.InstallIn
+import dagger.hilt.components.SingletonComponent
 
 @Composable
 fun UpdatedFooter(data: DepartureBoardWidgetData) {
@@ -51,7 +57,7 @@ fun UpdatedFooter(data: DepartureBoardWidgetData) {
       modifier =
       GlanceModifier
         .visibility(if (VERSION.SDK_INT >= 31) Invisible else Visible)
-        .clickable(startConfigurationActivityAction(LocalGlanceId.current)),
+        .clickable(startConfigurationActivityAction()),
       srcResId = drawable.ic_edit_inset,
       contentDescResId = string.edit
     )
@@ -105,6 +111,14 @@ fun ImageButton(
 
 class ClickFooterAction : ActionCallback {
   override suspend fun onRun(context: Context, glanceId: GlanceId, parameters: ActionParameters) {
-    DepartureBoardWidgetDataManager.updateData()
+    val entryPoint =
+      EntryPoints.get(context.applicationContext, ClickFooterActionEntryPoint::class.java)
+    entryPoint.dataManager.updateData()
   }
+}
+
+@EntryPoint
+@InstallIn(SingletonComponent::class)
+interface ClickFooterActionEntryPoint {
+  val dataManager: DepartureBoardWidgetDataManager
 }

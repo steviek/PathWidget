@@ -28,21 +28,26 @@ import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import com.sixbynine.transit.path.R
 import com.sixbynine.transit.path.R.color
-import com.sixbynine.transit.path.application
-import com.sixbynine.transit.path.context
 import com.sixbynine.transit.path.ktx.drawableBackground
 import com.sixbynine.transit.path.ktx.toAppWidgetId
 import com.sixbynine.transit.path.serialization.JsonFormat
-import com.sixbynine.transit.path.time.formatLocalTime
+import com.sixbynine.transit.path.time.DateTimeFormatter
 import com.sixbynine.transit.path.widget.configuration.DepartureBoardWidgetConfigurationActivity
+import dagger.hilt.android.AndroidEntryPoint
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.decodeFromString
+import java.time.Instant
 import java.time.LocalTime
+import javax.inject.Inject
 
 /** Our widget! */
-class DepartureBoardWidget : GlanceAppWidget() {
+class DepartureBoardWidget @Inject internal constructor(
+  @ApplicationContext private val context: Context,
+  private val dateTimeFormatter: DateTimeFormatter
+) : GlanceAppWidget() {
 
-  override val sizeMode = SizeMode.Responsive(setOf(SmallWidgetSize, MediumWidgetSize))
+  override val sizeMode = SizeMode.Responsive(setOf(SmallWidgetSize, getMediumWidgetSize()))
 
   override val stateDefinition = PreferencesGlanceStateDefinition
 
@@ -80,7 +85,7 @@ class DepartureBoardWidget : GlanceAppWidget() {
   fun SetupView() {
     Text(
       modifier = GlanceModifier
-        .clickable(startConfigurationActivityAction(LocalGlanceId.current))
+        .clickable(startConfigurationActivityAction())
         .drawableBackground(R.drawable.ripple_rect)
         .padding(16.dp),
       text = getString(R.string.complete_widget_setup),
@@ -98,6 +103,17 @@ class DepartureBoardWidget : GlanceAppWidget() {
     ProgressBar(modifier = GlanceModifier.width(48.dp).height(48.dp))
     Text(text = getString(R.string.loading), modifier = GlanceModifier.padding(top = 8.dp))
   }
+
+  private fun getMediumWidgetSize(): DpSize {
+    val widestUpdatedAtText =
+      context.getString(
+        R.string.updated_at_x,
+        dateTimeFormatter.formatLocalTime(LocalTime.of(22, 20))
+      )
+    val updatedAtWidth = estimateTextWidth(context, widestUpdatedAtText, 12.sp)
+    val requiredWidth = 16.dp * 2 + 8.dp + 32.dp + updatedAtWidth
+    return DpSize(requiredWidth, 1.dp)
+  }
 }
 
 @Composable
@@ -109,43 +125,50 @@ fun ProgressBar(modifier: GlanceModifier) {
   }
 }
 
+@AndroidEntryPoint
 class DepartureBoardWidgetReceiver : GlanceAppWidgetReceiver() {
-  override val glanceAppWidget = DepartureBoardWidget()
+  @Inject
+  lateinit var dataManager: DepartureBoardWidgetDataManager
+
+  @Inject
+  lateinit var widget: DepartureBoardWidget
+
+  override val glanceAppWidget get() = widget
 
   override fun onReceive(context: Context, intent: Intent) {
     super.onReceive(context, intent)
     runBlocking {
-      DepartureBoardWidgetDataManager.updateData()
+      dataManager.updateData()
     }
   }
 }
 
 val DEPARTURE_WIDGET_PREFS_KEY = stringPreferencesKey("departure_widget_data")
 
-fun getString(@StringRes resId: Int): String {
-  return application.getString(resId)
-}
-
-fun getString(@StringRes resId: Int, vararg args: Any): String {
-  return application.getString(resId, *args)
-}
-
-fun startConfigurationActivityAction(glanceId: GlanceId): Action {
-  val appWidgetId = glanceId.toAppWidgetId()
+@Composable
+fun startConfigurationActivityAction(): Action {
+  val appWidgetId = LocalGlanceId.current.toAppWidgetId()
   val configurationIntent =
     Intent(AppWidgetManager.ACTION_APPWIDGET_CONFIGURE)
-      .setClass(context, DepartureBoardWidgetConfigurationActivity::class.java)
+      .setClass(LocalContext.current, DepartureBoardWidgetConfigurationActivity::class.java)
       .putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
       .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
   return actionStartActivity(configurationIntent)
 }
 
 val SmallWidgetSize = DpSize(1.dp, 1.dp)
-val MediumWidgetSize: DpSize
-  get() {
-    val widestUpdatedAtText =
-      getString(R.string.updated_at_x, formatLocalTime(LocalTime.of(22, 20)))
-    val updatedAtWidth = estimateTextWidth(widestUpdatedAtText, 12.sp)
-    val requiredWidth = 16.dp * 2 + 8.dp + 32.dp + updatedAtWidth
-    return DpSize(requiredWidth, 1.dp)
-  }
+
+@Composable
+fun getString(@StringRes resId: Int): String {
+  return LocalContext.current.getString(resId)
+}
+
+@Composable
+fun getString(@StringRes resId: Int, vararg args: Any): String {
+  return LocalContext.current.getString(resId, *args)
+}
+
+@Composable
+fun formatLocalTime(time: Instant): String {
+  return DateTimeFormatter.from(LocalContext.current).formatLocalTime(time)
+}

@@ -4,9 +4,11 @@ plugins {
   kotlin("android")
   kotlin("kapt")
   kotlin("plugin.serialization") version "1.5.31"
+  id("dagger.hilt.android.plugin")
 }
 
 val composeVersion = "1.1.0-beta03"
+val hiltVersion = "2.40.5"
 
 android {
   compileSdkVersion(31)
@@ -71,6 +73,13 @@ dependencies {
 
   coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:1.1.5")
 
+  implementation("com.google.dagger:hilt-android:$hiltVersion")
+  kapt("com.google.dagger:hilt-compiler:$hiltVersion")
+  androidTestImplementation("com.google.dagger:hilt-android-testing:$hiltVersion")
+  kaptAndroidTest("com.google.dagger:hilt-compiler:$hiltVersion")
+  testImplementation("com.google.dagger:hilt-android-testing:$hiltVersion")
+  kaptTest("com.google.dagger:hilt-compiler:$hiltVersion")
+
   testImplementation("junit:junit:4.13.2")
   testImplementation("org.robolectric:robolectric:4.6")
   testImplementation("com.google.truth:truth:1.1.3")
@@ -81,4 +90,8 @@ dependencies {
 // Allow references to generated code
 kapt {
   correctErrorTypes = true
+}
+
+hilt {
+  enableAggregatingTask = true
 }

@@ -1,6 +1,11 @@
 package com.sixbynine.transit.path.time
 
 import com.google.common.truth.Truth.assertThat
+import dagger.hilt.android.testing.HiltAndroidRule
+import dagger.hilt.android.testing.HiltAndroidTest
+import dagger.hilt.android.testing.HiltTestApplication
+import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -8,9 +13,20 @@ import org.robolectric.annotation.Config
 import org.robolectric.shadows.ShadowSettings
 import java.time.LocalTime
 import java.util.Locale
+import javax.inject.Inject
 
+@HiltAndroidTest
 @RunWith(RobolectricTestRunner::class)
-class DateTimeFormattingTest {
+class DateTimeFormatterTest {
+  @get:Rule val hiltRule = HiltAndroidRule(this)
+
+  @Inject lateinit var dateTimeFormatter: DateTimeFormatter
+
+  @Before
+  fun setUp() {
+    hiltRule.inject()
+  }
+
   @Config(sdk = [23])
   @Test
   fun formatLocalTime_12hr_23() {
@@ -78,4 +94,6 @@ class DateTimeFormattingTest {
     assertThat(formatLocalTime(LocalTime.of(12, 10))).isEqualTo("12:10")
     assertThat(formatLocalTime(LocalTime.of(16, 3))).isEqualTo("16:03")
   }
+
+  private fun formatLocalTime(time: LocalTime) = dateTimeFormatter.formatLocalTime(time)
 }

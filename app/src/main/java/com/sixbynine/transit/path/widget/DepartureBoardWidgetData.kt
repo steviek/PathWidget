@@ -23,7 +23,7 @@ data class DepartureBoardWidgetData(
 /** Details about the last time we attempted to refresh the widget's data. */
 @Serializable
 data class LastRefreshData(
-  val time: BootTimestamp = BootTimestamp.now(),
+  val time: BootTimestamp,
   val wasSuccess: Boolean = true,
   val hadInternet: Boolean = true
 )

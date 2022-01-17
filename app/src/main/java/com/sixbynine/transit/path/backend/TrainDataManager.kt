@@ -5,24 +5,51 @@ import com.sixbynine.transit.path.api.PathDataService
 import com.sixbynine.transit.path.api.Station
 import com.sixbynine.transit.path.api.UpcomingTrain
 import com.sixbynine.transit.path.serialization.JsonFormat
+import dagger.Binds
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType
 import retrofit2.Retrofit
+import javax.inject.Inject
+
+interface TrainDataManager {
+  suspend fun getStations(): Result<List<Station>>
+  suspend fun getUpcomingTrains(station: Station): Result<List<UpcomingTrain>>
+}
+
+@InstallIn(SingletonComponent::class)
+@Module
+interface TrainDataManagerModule {
+  @Binds
+  fun bindTrainDataManager(manager: DefaultTrainDataManager): TrainDataManager
+}
+
+@InstallIn(SingletonComponent::class)
+@Module
+object PathDataServiceModule {
+  @Provides
+  fun providePathDataService(): PathDataService {
+    val contentType = MediaType.get("application/json")
+    val retrofit = Retrofit.Builder()
+      .baseUrl("https://path.api.razza.dev/v1/")
+      .addConverterFactory(JsonFormat.asConverterFactory(contentType))
+      .build()
+    return retrofit.create(PathDataService::class.java)
+  }
+}
 
 /** Wrapper around retrofit to provide coroutines. */
 // TODO: Handle cancellation properly
-class TrainDataManager {
-
-  private val contentType = MediaType.get("application/json")
-  private val retrofit = Retrofit.Builder()
-    .baseUrl("https://path.api.razza.dev/v1/")
-    .addConverterFactory(JsonFormat.asConverterFactory(contentType))
-    .build()
-  private val service = retrofit.create(PathDataService::class.java)
+class DefaultTrainDataManager @Inject internal constructor(
+  private val service: PathDataService
+): TrainDataManager {
 
   /** Returns the list of [Station]s according to the API. */
-  suspend fun getStations(): Result<List<Station>> = withContext(Dispatchers.IO) {
+  override suspend fun getStations(): Result<List<Station>> = withContext(Dispatchers.IO) {
     val response = try {
       service.getStations().execute()
     } catch (t: Throwable) {
@@ -38,7 +65,7 @@ class TrainDataManager {
   }
 
   /** Returns the [UpcomingTrain]s for [station]. */
-  suspend fun getUpcomingTrains(station: Station): Result<List<UpcomingTrain>> =
+  override suspend fun getUpcomingTrains(station: Station): Result<List<UpcomingTrain>> =
     withContext(Dispatchers.IO) {
       val response = try {
         service.getRealtimeArrivals(station.apiName).execute()

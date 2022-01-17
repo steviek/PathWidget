@@ -1,6 +1,5 @@
 package com.sixbynine.transit.path.widget
 
-import android.content.Context
 import android.graphics.drawable.Icon
 import android.os.Build.VERSION
 import androidx.annotation.ColorInt
@@ -8,23 +7,32 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.glance.*
+import androidx.glance.GlanceModifier
+import androidx.glance.Image
+import androidx.glance.ImageProvider
+import androidx.glance.LocalContext
 import androidx.glance.Visibility.Gone
 import androidx.glance.Visibility.Visible
-import androidx.glance.action.ActionParameters
-import androidx.glance.action.clickable
-import androidx.glance.appwidget.action.ActionCallback
-import androidx.glance.appwidget.action.actionRunCallback
 import androidx.glance.appwidget.lazy.LazyColumn
-import androidx.glance.layout.*
+import androidx.glance.background
 import androidx.glance.layout.Alignment.Vertical
-import androidx.glance.text.TextAlign
-import androidx.glance.text.TextStyle
+import androidx.glance.layout.Box
+import androidx.glance.layout.Column
+import androidx.glance.layout.Row
+import androidx.glance.layout.Spacer
+import androidx.glance.layout.fillMaxSize
+import androidx.glance.layout.fillMaxWidth
+import androidx.glance.layout.height
+import androidx.glance.layout.padding
+import androidx.glance.layout.size
+import androidx.glance.layout.width
+import androidx.glance.visibility
 import com.sixbynine.transit.path.R
 import com.sixbynine.transit.path.R.color
 import com.sixbynine.transit.path.api.Station
 import com.sixbynine.transit.path.ktx.toColor
-import com.sixbynine.transit.path.time.formatLocalTime
+import com.sixbynine.transit.path.time.DateTimeFormatter
+import com.sixbynine.transit.path.time.DateTimeFormatter.Companion
 import com.sixbynine.transit.path.util.logDebug
 
 @Composable
@@ -65,6 +73,7 @@ fun DepartureList(data: DepartureBoardWidgetData, modifier: GlanceModifier) {
 
 @Composable
 fun StationDepartures(data: LoadedWidgetData, station: Station) {
+  val context = LocalContext.current
   val allTrains =
     data.stationToTrains.filterKeys { it.apiName == station.apiName }.flatMap { it.value }
   Column(
@@ -102,7 +111,9 @@ fun StationDepartures(data: LoadedWidgetData, station: Station) {
               trains
                 .map { it.projectedArrival }
                 .sorted()
-                .joinToString(separator = ", ") { formatLocalTime(it) }
+                .joinToString(separator = ", ") {
+                  DateTimeFormatter.from(context).formatLocalTime(it)
+                }
             SecondaryText(text = times, fontSize = 14.sp)
             Spacer(modifier = GlanceModifier.height(8.dp))
           }

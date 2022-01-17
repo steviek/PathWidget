@@ -4,8 +4,6 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
-import com.sixbynine.transit.path.PathWidgetApplication
-import com.sixbynine.transit.path.application
 
 /** Listener for boot complete to track boot count on pre-24 devices. */
 class BootCompleteReceiver : BroadcastReceiver() {
@@ -16,8 +14,8 @@ class BootCompleteReceiver : BroadcastReceiver() {
   }
 }
 
-fun getPre24BootCount(): Int {
-  val prefs = getPrefs(application)
+fun getPre24BootCount(context: Context): Int {
+  val prefs = getPrefs(context)
   return prefs.getInt(BootCountKey, 0)
 }
 
