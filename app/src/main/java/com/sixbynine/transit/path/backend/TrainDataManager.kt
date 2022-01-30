@@ -72,7 +72,9 @@ class DefaultTrainDataManager @Inject internal constructor(
   override suspend fun getUpcomingTrains(station: Station): Result<List<UpcomingTrain>> =
     withContext(Dispatchers.IO) {
       val response = try {
-        service.getRealtimeArrivals(station.apiName).execute()
+        withTimeout(2.seconds.toMillis()) {
+          service.getRealtimeArrivals(station.apiName).execute()
+        }
       } catch (t: Throwable) {
         return@withContext Result.failure(t)
       }
