@@ -4,6 +4,7 @@ import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFact
 import com.sixbynine.transit.path.api.PathDataService
 import com.sixbynine.transit.path.api.Station
 import com.sixbynine.transit.path.api.UpcomingTrain
+import com.sixbynine.transit.path.ktx.seconds
 import com.sixbynine.transit.path.serialization.JsonFormat
 import dagger.Binds
 import dagger.Module
@@ -12,6 +13,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import okhttp3.MediaType
 import retrofit2.Retrofit
 import javax.inject.Inject
@@ -51,7 +53,9 @@ class DefaultTrainDataManager @Inject internal constructor(
   /** Returns the list of [Station]s according to the API. */
   override suspend fun getStations(): Result<List<Station>> = withContext(Dispatchers.IO) {
     val response = try {
-      service.getStations().execute()
+      withTimeout(2.seconds.toMillis()) {
+        service.getStations().execute()
+      }
     } catch (t: Throwable) {
       return@withContext Result.failure(t)
     }
