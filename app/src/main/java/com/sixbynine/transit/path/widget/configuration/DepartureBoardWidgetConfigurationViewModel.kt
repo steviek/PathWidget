@@ -10,6 +10,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.sixbynine.transit.path.ktx.getGlanceId
 import com.sixbynine.transit.path.ktx.toAppWidgetId
 import com.sixbynine.transit.path.util.logWarning
 import com.sixbynine.transit.path.widget.DepartureBoardWidget
@@ -87,8 +88,6 @@ class DepartureBoardWidgetConfigurationViewModel @Inject internal constructor(
   }
 
   private suspend fun getGlanceId(appWidgetId: Int): GlanceId? {
-    return glanceAppWidgetManager
-      .getGlanceIds(DepartureBoardWidget::class.java)
-      .firstOrNull { it.toAppWidgetId() == appWidgetId }
+    return glanceAppWidgetManager.getGlanceId<DepartureBoardWidget>(appWidgetId)
   }
 }

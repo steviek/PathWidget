@@ -31,7 +31,7 @@ data class LastRefreshData(
 @Serializable
 data class LoadedWidgetData(
   private val stationAndTrains: List<Pair<Station, List<UpcomingTrain>>>,
-  private val updateTimeMillis: Long = Instant.now().toEpochMilli(),
+  private val updateTimeMillis: Long,
   val closestStation: String? = null
 ) {
   @Transient

@@ -28,5 +28,5 @@ data class UpcomingTrain(
   val lineColors = rawLineColors.map { Color.parseColor(it) }
 }
 
-private const val TIME_PATTERN = "yyyy-MM-dd'T'HH:mm:ssz"
-private val DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern(TIME_PATTERN)
+const val TIME_PATTERN = "yyyy-MM-dd'T'HH:mm:ssz"
+val DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern(TIME_PATTERN)

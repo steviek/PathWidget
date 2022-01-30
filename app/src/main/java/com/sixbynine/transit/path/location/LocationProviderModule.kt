@@ -9,7 +9,6 @@ import android.location.Location
 import android.location.LocationManager
 import android.os.Build.VERSION
 import android.os.CancellationSignal
-import android.os.SystemClock
 import android.util.Log
 import androidx.annotation.RequiresPermission
 import com.sixbynine.transit.path.ktx.minutes
@@ -17,6 +16,7 @@ import com.sixbynine.transit.path.location.LocationCheckResult.Failure
 import com.sixbynine.transit.path.location.LocationCheckResult.NoPermission
 import com.sixbynine.transit.path.location.LocationCheckResult.NoProvider
 import com.sixbynine.transit.path.location.LocationCheckResult.Success
+import com.sixbynine.transit.path.time.ElapsedRealtimeProvider
 import com.sixbynine.transit.path.util.LogTag
 import dagger.Binds
 import dagger.Module
@@ -31,7 +31,8 @@ import javax.inject.Inject
 
 class NonGmsLocationProvider @Inject internal constructor(
   @ApplicationContext private val context: Context,
-  private val locationManager: LocationManager
+  private val locationManager: LocationManager,
+  private val elapsedRealtimeProvider: ElapsedRealtimeProvider
 ): LocationProvider {
   override suspend fun tryToGetLocation(timeout: Duration): LocationCheckResult {
     // This is duplicated code, but it prevents Android Studio lint complaining.
@@ -50,9 +51,6 @@ class NonGmsLocationProvider @Inject internal constructor(
     val provider =
       locationManager.getBestProvider(criteria, /* enabledOnly= */ true) ?: return NoProvider
     val lastKnownLocation = locationManager.getLastKnownLocation(provider)
-    if (lastKnownLocation != null && lastKnownLocation.age < 15.minutes) {
-      return Success(lastKnownLocation)
-    }
 
     return try {
       withTimeout(timeout.toMillis()) {
@@ -90,6 +88,9 @@ class NonGmsLocationProvider @Inject internal constructor(
       )
     }
   }
+
+  private val Location.age: Duration
+    get() = elapsedRealtimeProvider.elapsedRealtime() - elapsedRealtime
 }
 
 @InstallIn(SingletonComponent::class)
@@ -99,6 +100,9 @@ interface LocationProviderModule {
   fun bindLocationProvider(provider: NonGmsLocationProvider): LocationProvider
 }
 
-val Location.age: Duration
-  get() = Duration.ofNanos(SystemClock.elapsedRealtimeNanos()) -
-      Duration.ofNanos(elapsedRealtimeNanos)
+var Location.elapsedRealtime: Duration
+  get() = Duration.ofNanos(elapsedRealtimeNanos)
+  set(value) {
+    elapsedRealtimeNanos = value.toNanos()
+  }
+

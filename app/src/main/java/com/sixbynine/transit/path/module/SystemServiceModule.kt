@@ -1,5 +1,6 @@
 package com.sixbynine.transit.path.module
 
+import android.appwidget.AppWidgetManager
 import android.content.ContentResolver
 import android.content.Context
 import android.location.LocationManager
@@ -16,6 +17,11 @@ object SystemServiceModule {
   @Provides
   fun provideGlanceAppWidgetManager(@ApplicationContext context: Context): GlanceAppWidgetManager {
     return GlanceAppWidgetManager(context)
+  }
+
+  @Provides
+  fun provideAppWidgetManager(@ApplicationContext context: Context): AppWidgetManager {
+    return AppWidgetManager.getInstance(context)
   }
 
   @Provides

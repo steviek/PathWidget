@@ -17,6 +17,8 @@ import com.sixbynine.transit.path.location.LocationProvider
 import com.sixbynine.transit.path.serialization.JsonFormat
 import com.sixbynine.transit.path.station.StationLister
 import com.sixbynine.transit.path.time.BootTimestampProvider
+import com.sixbynine.transit.path.time.TimeSource
+import com.sixbynine.transit.path.time.millis
 import com.sixbynine.transit.path.util.logDebug
 import com.sixbynine.transit.path.util.logWarning
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -35,7 +37,8 @@ class DepartureBoardWidgetDataManager @Inject internal constructor(
   private val locationProvider: LocationProvider,
   private val stationLister: StationLister,
   private val widget: DepartureBoardWidget,
-  private val bootTimestampProvider: BootTimestampProvider
+  private val bootTimestampProvider: BootTimestampProvider,
+  private val timeSource: TimeSource
 ) {
 
   private suspend fun getGlanceIds(): List<GlanceId> {
@@ -140,7 +143,11 @@ class DepartureBoardWidgetDataManager @Inject internal constructor(
         }
         previousData == null -> {
           DepartureBoardWidgetData(
-            loadedData = LoadedWidgetData(stationsAndTrains, closestStation = closestStationName),
+            loadedData = LoadedWidgetData(
+              stationsAndTrains,
+              updateTimeMillis = timeSource.millis(),
+              closestStation = closestStationName
+            ),
             lastRefresh = LastRefreshData(now, wasSuccess = true),
             isLoading = false,
           )
@@ -149,6 +156,7 @@ class DepartureBoardWidgetDataManager @Inject internal constructor(
           previousData.copy(
             loadedData = LoadedWidgetData(
               stationsAndTrains,
+              updateTimeMillis = timeSource.millis(),
               closestStation = closestStationName ?: previousData.loadedData?.closestStation
             ),
             lastRefresh = LastRefreshData(now, wasSuccess = true),
