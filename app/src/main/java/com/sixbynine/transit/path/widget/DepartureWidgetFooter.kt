@@ -11,8 +11,6 @@ import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.Image
 import androidx.glance.ImageProvider
-import androidx.glance.LocalContext
-import androidx.glance.LocalGlanceId
 import androidx.glance.LocalSize
 import androidx.glance.Visibility.Gone
 import androidx.glance.Visibility.Invisible
@@ -21,7 +19,6 @@ import androidx.glance.action.ActionParameters
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.action.ActionCallback
 import androidx.glance.appwidget.action.actionRunCallback
-import androidx.glance.background
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
 import androidx.glance.layout.Row
@@ -36,8 +33,6 @@ import androidx.glance.visibility
 import com.sixbynine.transit.path.R.drawable
 import com.sixbynine.transit.path.R.string
 import com.sixbynine.transit.path.ktx.drawableBackground
-import com.sixbynine.transit.path.time.DateTimeFormatter
-import com.sixbynine.transit.path.time.DateTimeFormatter.Companion
 import dagger.hilt.EntryPoint
 import dagger.hilt.EntryPoints
 import dagger.hilt.InstallIn
@@ -53,6 +48,7 @@ fun UpdatedFooter(data: DepartureBoardWidgetData) {
     verticalAlignment = Alignment.CenterVertically,
     modifier = GlanceModifier.fillMaxWidth().height(48.dp)
   ) {
+    Spacer(modifier = GlanceModifier.width(16.dp).height(48.dp))
     ImageButton(
       modifier =
       GlanceModifier
@@ -62,12 +58,14 @@ fun UpdatedFooter(data: DepartureBoardWidgetData) {
       contentDescResId = string.edit
     )
     Spacer(modifier = GlanceModifier.defaultWeight().height(1.dp))
+    val isSmallSize = LocalSize.current == SmallWidgetSize
     val updatedAtText = when {
+      data.isLoading -> getString(if (isSmallSize) string.refreshing_short else string.refreshing)
       !data.lastRefresh.wasSuccess && !data.lastRefresh.hadInternet -> {
         getString(string.no_internet)
       }
       !data.lastRefresh.wasSuccess -> getString(string.failed_to_update)
-      LocalSize.current == SmallWidgetSize -> formatLocalTime(data.loadedData.updateTime)
+      isSmallSize -> formatLocalTime(data.loadedData.updateTime)
       else -> getString(string.updated_at_x, formatLocalTime(data.loadedData.updateTime))
     }
     SecondaryText(
@@ -92,7 +90,7 @@ fun UpdatedFooter(data: DepartureBoardWidgetData) {
       )
     }
 
-    Spacer(modifier = GlanceModifier.width(8.dp).height(48.dp))
+    Spacer(modifier = GlanceModifier.width(16.dp).height(48.dp))
   }
 }
 
@@ -120,5 +118,5 @@ class ClickFooterAction : ActionCallback {
 @EntryPoint
 @InstallIn(SingletonComponent::class)
 interface ClickFooterActionEntryPoint {
-  val dataManager: DepartureBoardWidgetDataManager
+  val dataManager: WidgetUpdater
 }

@@ -9,6 +9,7 @@ plugins {
 val composeVersion = "1.1.0-beta03"
 val glanceVersion = "1.0.0-alpha02"
 val hiltVersion = "2.40.5"
+val roomVersion = "2.4.1"
 
 android {
   compileSdk = 31
@@ -71,6 +72,10 @@ dependencies {
   implementation("com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter:0.8.0")
   implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2")
 
+  implementation("androidx.room:room-runtime:$roomVersion")
+  kapt("androidx.room:room-compiler:$roomVersion")
+  implementation("androidx.room:room-ktx:$roomVersion")
+
   coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:1.1.5")
 
   implementation("com.google.dagger:hilt-android:$hiltVersion")
@@ -81,7 +86,7 @@ dependencies {
   kaptTest("com.google.dagger:hilt-compiler:$hiltVersion")
 
   testImplementation("junit:junit:4.13.2")
-  testImplementation("org.robolectric:robolectric:4.6")
+  testImplementation("org.robolectric:robolectric:4.7.3")
   testImplementation("com.google.truth:truth:1.1.3")
   testImplementation(kotlin("test"))
   androidTestImplementation("androidx.test.ext:junit:1.1.3")

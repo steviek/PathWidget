@@ -26,6 +26,10 @@ class FakeTrainDataManager @Inject constructor(): TrainDataManager {
   fun setUpcomingTrains(stationName: String, trains: List<UpcomingTrain>) {
     stationToTrain[stationName] = Result.success(trains)
   }
+
+  fun setUpcomingTrainsFailed(stationName: String) {
+    stationToTrain[stationName] = Result.failure(RuntimeException())
+  }
 }
 
 @TestInstallIn(

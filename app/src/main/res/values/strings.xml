@@ -6,6 +6,8 @@
     <string name="choose_stations_configuration">Choose the stations to display in the widget</string>
     <string name="confirm">Confirm</string>
     <string name="refresh">Refresh</string>
+    <string name="refreshing">Refreshing…</string>
+    <string name="refreshing_short">…</string>
     <string name="no_internet">No internet</string>
     <string name="failed_to_update">Failed to update</string>
     <string name="add_widget">Add widget</string>
@@ -16,4 +18,6 @@
     <string name="report_problem">Report a problem</string>
     <string name="complete_widget_setup">Complete widget setup</string>
     <string name="edit">Edit</string>
+    <string name="background_location_permission_title">Grant background location access?</string>
+    <string name="background_location_permission_message">Without background location access, the widget can\'t automatically keep your closest station up to date and it will only change when you click the refresh button.\n\nTo grant permission, set the location permission for the app to \'Allow all the time\'. Do you want to grant permission in Settings?</string>
 </resources>

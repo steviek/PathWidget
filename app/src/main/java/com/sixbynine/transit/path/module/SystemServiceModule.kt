@@ -4,6 +4,7 @@ import android.appwidget.AppWidgetManager
 import android.content.ContentResolver
 import android.content.Context
 import android.location.LocationManager
+import android.net.ConnectivityManager
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import dagger.Module
 import dagger.Provides
@@ -25,12 +26,17 @@ object SystemServiceModule {
   }
 
   @Provides
-  fun provideLocationManager(@ApplicationContext context: Context): LocationManager {
-    return context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+  fun provideLocationManager(@ApplicationContext context: Context): LocationManager? {
+    return context.getSystemService(Context.LOCATION_SERVICE) as LocationManager?
   }
 
   @Provides
   fun provideContentResolver(@ApplicationContext context: Context): ContentResolver {
     return context.contentResolver
+  }
+
+  @Provides
+  fun provideConnectivityManager(@ApplicationContext context: Context): ConnectivityManager {
+    return context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
   }
 }

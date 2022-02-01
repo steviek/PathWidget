@@ -11,12 +11,12 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sixbynine.transit.path.ktx.getGlanceId
-import com.sixbynine.transit.path.ktx.toAppWidgetId
-import com.sixbynine.transit.path.util.logWarning
+import com.sixbynine.transit.path.logging.Logging
 import com.sixbynine.transit.path.widget.DepartureBoardWidget
 import com.sixbynine.transit.path.widget.DepartureBoardWidgetData
-import com.sixbynine.transit.path.widget.DepartureBoardWidgetDataManager
+import com.sixbynine.transit.path.widget.WidgetUpdater
 import com.sixbynine.transit.path.widget.DepartureBoardWidgetReceiver
+import com.sixbynine.transit.path.widget.SavedWidgetDataManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.launch
@@ -26,8 +26,10 @@ import javax.inject.Inject
 class DepartureBoardWidgetConfigurationViewModel @Inject internal constructor(
   // Pretty sure this doesn't leak a context...
   @field:SuppressLint("StaticFieldLeak") @ApplicationContext private val context: Context,
-  private val dataManager: DepartureBoardWidgetDataManager,
-  private val glanceAppWidgetManager: GlanceAppWidgetManager
+  private val dataManager: WidgetUpdater,
+  private val glanceAppWidgetManager: GlanceAppWidgetManager,
+  private val savedWidgetDataManager: SavedWidgetDataManager,
+  private val logging: Logging
 ): ViewModel() {
 
   private val _previousData = MutableLiveData<DepartureBoardWidgetData?>(null)
@@ -45,7 +47,7 @@ class DepartureBoardWidgetConfigurationViewModel @Inject internal constructor(
    */
   fun loadPreviousData(appWidgetId: Int) = viewModelScope.launch {
     val glanceId = getGlanceId(appWidgetId) ?: return@launch
-    val previousData = dataManager.getWidgetData(glanceId) ?: return@launch
+    val previousData = savedWidgetDataManager.getWidgetData(glanceId) ?: return@launch
     _previousData.value = previousData
   }
 
@@ -61,13 +63,13 @@ class DepartureBoardWidgetConfigurationViewModel @Inject internal constructor(
     val glanceId = getGlanceId(appWidgetId)
     if (glanceId == null) {
       // This shouldn't really ever happen.
-      logWarning("Couldn't get glance id for $appWidgetId")
+      logging.warn("Couldn't get glance id for $appWidgetId")
       dataManager.updateData()
       _configurationComplete.value = true
       return@launch
     }
 
-    dataManager.updateWidget(glanceId, false) { previousData ->
+    savedWidgetDataManager.updateWidgetData(glanceId) { previousData ->
       when (previousData) {
         null -> DepartureBoardWidgetData(
           fixedStations = stations,

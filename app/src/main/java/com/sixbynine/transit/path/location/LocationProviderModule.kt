@@ -9,15 +9,12 @@ import android.location.Location
 import android.location.LocationManager
 import android.os.Build.VERSION
 import android.os.CancellationSignal
-import android.util.Log
 import androidx.annotation.RequiresPermission
-import com.sixbynine.transit.path.ktx.minutes
 import com.sixbynine.transit.path.location.LocationCheckResult.Failure
 import com.sixbynine.transit.path.location.LocationCheckResult.NoPermission
 import com.sixbynine.transit.path.location.LocationCheckResult.NoProvider
 import com.sixbynine.transit.path.location.LocationCheckResult.Success
-import com.sixbynine.transit.path.time.ElapsedRealtimeProvider
-import com.sixbynine.transit.path.util.LogTag
+import com.sixbynine.transit.path.logging.Logging
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -31,16 +28,25 @@ import javax.inject.Inject
 
 class NonGmsLocationProvider @Inject internal constructor(
   @ApplicationContext private val context: Context,
-  private val locationManager: LocationManager,
-  private val elapsedRealtimeProvider: ElapsedRealtimeProvider
+  private val locationManager: LocationManager?,
+  private val logging: Logging
 ): LocationProvider {
+
+  override val isLocationSupportedByDevice: Boolean
+    get() = locationManager != null
+
   override suspend fun tryToGetLocation(timeout: Duration): LocationCheckResult {
+    if (locationManager == null) {
+      return NoProvider
+    }
+
     // This is duplicated code, but it prevents Android Studio lint complaining.
     if (
       VERSION.SDK_INT >= 23 &&
       context.checkSelfPermission(ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
       context.checkSelfPermission(ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
     ) {
+      logging.debug("Don't have permission to get the user's location")
       return NoPermission
     }
 
@@ -51,16 +57,21 @@ class NonGmsLocationProvider @Inject internal constructor(
     val provider =
       locationManager.getBestProvider(criteria, /* enabledOnly= */ true) ?: return NoProvider
     val lastKnownLocation = locationManager.getLastKnownLocation(provider)
+    logging.debug("Last known location is ${lastKnownLocation?.toLatLngStringWithGoogleApiLink()}")
 
     return try {
       withTimeout(timeout.toMillis()) {
-        Success(locationManager.getCurrentLocation(provider))
+        val currentLocation = locationManager.getCurrentLocation(provider)
+        logging.debug(
+          "Retrieved current location as ${currentLocation.toLatLngStringWithGoogleApiLink()} from $provider"
+        )
+        Success(currentLocation)
       }
     } catch (e: TimeoutCancellationException) {
-      Log.w(LogTag, "Timed out trying to get the user's location")
+      logging.warn("Timed out trying to get the user's location")
       lastKnownLocation?.let { Success(it) } ?: Failure(e)
     } catch (t: Throwable) {
-      Log.w(LogTag, "Unexpected error getting the user's location")
+      logging.warn("Unexpected error getting the user's location", t)
       lastKnownLocation?.let { Success(it) } ?: Failure(t)
     }
   }
@@ -89,8 +100,10 @@ class NonGmsLocationProvider @Inject internal constructor(
     }
   }
 
-  private val Location.age: Duration
-    get() = elapsedRealtimeProvider.elapsedRealtime() - elapsedRealtime
+  private fun Location.toLatLngStringWithGoogleApiLink(): String {
+    return "($latitude, $longitude) [https://www.google.com/maps/search/" +
+        "?api=1&query=$latitude%2C$longitude]"
+  }
 }
 
 @InstallIn(SingletonComponent::class)

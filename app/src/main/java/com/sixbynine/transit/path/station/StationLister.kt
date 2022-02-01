@@ -21,7 +21,7 @@ class StationLister @Inject internal constructor(
   @ApplicationContext private val context: Context,
   private val trainDataManager: TrainDataManager,
   private val bootTimestampProvider: BootTimestampProvider
-){
+) {
   private val prefs: SharedPreferences
     get() = context.getSharedPreferences("stations", Context.MODE_PRIVATE)
 

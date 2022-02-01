@@ -128,7 +128,7 @@ fun ProgressBar(modifier: GlanceModifier) {
 @AndroidEntryPoint
 class DepartureBoardWidgetReceiver : GlanceAppWidgetReceiver() {
   @Inject
-  lateinit var dataManager: DepartureBoardWidgetDataManager
+  lateinit var dataManager: WidgetUpdater
 
   @Inject
   lateinit var widget: DepartureBoardWidget

@@ -3,60 +3,69 @@ package com.sixbynine.transit.path.widget
 import android.content.Context
 import android.net.ConnectivityManager
 import androidx.glance.GlanceId
-import androidx.glance.appwidget.GlanceAppWidgetManager
-import androidx.glance.appwidget.state.getAppWidgetState
-import androidx.glance.appwidget.state.updateAppWidgetState
-import androidx.glance.state.PreferencesGlanceStateDefinition
 import com.sixbynine.transit.path.backend.TrainDataManager
+import com.sixbynine.transit.path.glance.GlanceIdProvider
 import com.sixbynine.transit.path.ktx.seconds
 import com.sixbynine.transit.path.location.LocationCheckResult.Failure
 import com.sixbynine.transit.path.location.LocationCheckResult.NoPermission
 import com.sixbynine.transit.path.location.LocationCheckResult.NoProvider
 import com.sixbynine.transit.path.location.LocationCheckResult.Success
 import com.sixbynine.transit.path.location.LocationProvider
-import com.sixbynine.transit.path.serialization.JsonFormat
+import com.sixbynine.transit.path.logging.Logging
 import com.sixbynine.transit.path.station.StationLister
 import com.sixbynine.transit.path.time.BootTimestampProvider
+import com.sixbynine.transit.path.time.ElapsedRealtimeProvider
 import com.sixbynine.transit.path.time.TimeSource
 import com.sixbynine.transit.path.time.millis
-import com.sixbynine.transit.path.util.logDebug
-import com.sixbynine.transit.path.util.logWarning
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.encodeToString
+import java.time.Duration
 import javax.inject.Inject
+import javax.inject.Singleton
 
 /** Manages updating the configuration or displayed data for a widget. */
-class DepartureBoardWidgetDataManager @Inject internal constructor(
+@Singleton
+class WidgetUpdater @Inject internal constructor(
   @ApplicationContext private val context: Context,
   private val trainDataManager: TrainDataManager,
   private val locationProvider: LocationProvider,
   private val stationLister: StationLister,
-  private val widget: DepartureBoardWidget,
   private val bootTimestampProvider: BootTimestampProvider,
-  private val timeSource: TimeSource
+  private val elapsedRealtimeProvider: ElapsedRealtimeProvider,
+  private val timeSource: TimeSource,
+  private val savedWidgetDataManager: SavedWidgetDataManager,
+  private val widgetRefresher: WidgetRefresher,
+  private val glanceIdProvider: GlanceIdProvider,
+  private val connectivityManager: ConnectivityManager,
+  private val logging: Logging
 ) {
 
   private suspend fun getGlanceIds(): List<GlanceId> {
-    return GlanceAppWidgetManager(context).getGlanceIds(DepartureBoardWidget::class.java)
+    return glanceIdProvider.getGlanceIds(DepartureBoardWidget::class.java)
   }
 
-  private var loadingJob: Job? = null
+  @Volatile
+  private var loadingJob: LastLoadingJob? = null
 
   suspend fun updateData() {
-    withContext(Dispatchers.IO) {
-      synchronized(this) {
-        if (loadingJob == null || loadingJob?.isCompleted == true) {
-          loadingJob = launch { updateDataInner() }
+    val jobToJoin = withContext(Dispatchers.IO) {
+       synchronized(this) {
+         val localLoadingJob = loadingJob
+        if (localLoadingJob == null || localLoadingJob.isStale) {
+          logging.debug("Start new job to fetch train data")
+          val job = launch { updateDataInner() }
+          LastLoadingJob(job).also { loadingJob = it }
+        } else {
+          logging.debug("Join existing job to fetch train data")
+          localLoadingJob
         }
       }
     }
 
-    loadingJob?.join()
+    jobToJoin.job.join()
   }
 
   private suspend fun updateDataInner() {
@@ -65,7 +74,7 @@ class DepartureBoardWidgetDataManager @Inject internal constructor(
     val stationsToCheck = mutableSetOf<String>()
     // Update the widget with the loading indicator, which will re-render the widget with the
     // progress bar spinning while we load the data.
-    updateEachWidget { previousData ->
+    updateAndRefreshEachWidget { previousData ->
       isInitialDataLoad = previousData?.loadedData == null
       useClosestStation = previousData?.useClosestStation == true
       stationsToCheck += previousData?.fixedStations ?: emptySet()
@@ -79,21 +88,21 @@ class DepartureBoardWidgetDataManager @Inject internal constructor(
     if (useClosestStation) {
       val locationResult =
         locationProvider.tryToGetLocation(timeout = if (isInitialDataLoad) 1.seconds else 3.seconds)
-      logDebug("Location was retrieved as $locationResult")
+      logging.debug("Location was retrieved as $locationResult")
       when (locationResult) {
         is Failure -> {}
         NoPermission -> {
-          logWarning("Permission location was lost in background")
+          logging.warn("Permission location was lost in background")
           // TODO: Bug the user about this?
         }
         NoProvider -> {
-          logWarning("There's no longer a location provider")
+          logging.warn("There's no longer a location provider")
         }
         is Success -> {
           val location = locationResult.location
           val closestStation =
             stationLister.getClosestStation(location.latitude, location.longitude)
-          logDebug("The closest station is ${closestStation.displayName}")
+          logging.debug("The closest station is ${closestStation.displayName}")
           closestStationName = closestStation.apiName
           stationsToCheck += closestStationName
         }
@@ -126,7 +135,7 @@ class DepartureBoardWidgetDataManager @Inject internal constructor(
 
     // Update each widget with the data we just loaded.
     val now = bootTimestampProvider.now()
-    updateEachWidget { previousData ->
+    updateAndRefreshEachWidget { previousData ->
       when {
         anyError && previousData == null -> {
           DepartureBoardWidgetData(
@@ -167,47 +176,28 @@ class DepartureBoardWidgetDataManager @Inject internal constructor(
     }
   }
 
-  private suspend fun updateEachWidget(
+  private suspend fun updateAndRefreshEachWidget(
     function: (DepartureBoardWidgetData?) -> DepartureBoardWidgetData
   ) {
     val ids = getGlanceIds()
-    logDebug("updateEachWidget: $ids")
+    logging.debug("updateEachWidget: $ids")
     ids.forEach { id ->
-      updateWidget(id, true, function)
-    }
-  }
-
-  /** Returns the [DepartureBoardWidgetData] for the widget with [id], if it's been bound. */
-  suspend fun getWidgetData(id: GlanceId): DepartureBoardWidgetData? {
-    val state = getAppWidgetState(context, PreferencesGlanceStateDefinition, id)
-    return state[DEPARTURE_WIDGET_PREFS_KEY]?.let {
-      JsonFormat.decodeFromString<DepartureBoardWidgetData>(it)
-    }
-  }
-
-  /** Update the stored data for the widget with [id], and update its UI. */
-  suspend fun updateWidget(
-    id: GlanceId,
-    doUpdate: Boolean = true,
-    function: (DepartureBoardWidgetData?) -> DepartureBoardWidgetData
-  ) {
-    logDebug("update widget: $id")
-    val previousData = getWidgetData(id)
-    updateAppWidgetState(context, PreferencesGlanceStateDefinition, id) { newState ->
-      newState.toMutablePreferences()
-        .apply {
-          this[DEPARTURE_WIDGET_PREFS_KEY] = JsonFormat.encodeToString(function(previousData))
-        }
-    }
-    if (doUpdate) {
-      widget.update(context, id)
+      savedWidgetDataManager.updateWidgetData(id, function)
+      widgetRefresher.refreshWidget(id)
     }
   }
 
   private val isOnline: Boolean
     get() {
-      val connectivityManager =
-        context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
       return connectivityManager.activeNetworkInfo?.isConnectedOrConnecting ?: false
     }
+
+  private data class LastLoadingJob(val job: Job, val elapsedRealtime: Duration)
+
+  private fun LastLoadingJob(job: Job) =
+    LastLoadingJob(job, elapsedRealtimeProvider.elapsedRealtime())
+
+  private val LastLoadingJob.isStale: Boolean
+    get() = job.isCompleted &&
+        elapsedRealtimeProvider.elapsedRealtime() - elapsedRealtime > 1.seconds
 }

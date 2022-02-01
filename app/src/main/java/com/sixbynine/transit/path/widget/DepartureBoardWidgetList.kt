@@ -32,8 +32,6 @@ import com.sixbynine.transit.path.R.color
 import com.sixbynine.transit.path.api.Station
 import com.sixbynine.transit.path.ktx.toColor
 import com.sixbynine.transit.path.time.DateTimeFormatter
-import com.sixbynine.transit.path.time.DateTimeFormatter.Companion
-import com.sixbynine.transit.path.util.logDebug
 
 @Composable
 fun DepartureList(data: DepartureBoardWidgetData, modifier: GlanceModifier) {
@@ -62,7 +60,6 @@ fun DepartureList(data: DepartureBoardWidgetData, modifier: GlanceModifier) {
       }
       .distinctBy { it.apiName }
       .filter { it.apiName in stationsForWidget }
-      .also { logDebug("Display stations: ${it.map { it.displayName }}") }
       .forEach { station ->
         item {
           StationDepartures(data.loadedData, station)
@@ -168,3 +165,5 @@ fun ColorBox(@ColorInt firstColor: Int?, @ColorInt secondColor: Int? = null) {
     )
   }
 }
+
+

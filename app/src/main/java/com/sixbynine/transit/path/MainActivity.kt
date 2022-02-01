@@ -7,9 +7,13 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build.VERSION
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.Button
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
@@ -24,13 +28,39 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextAlign.Companion
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.sixbynine.transit.path.logging.IsLocalLoggingEnabled
+import com.sixbynine.transit.path.logging.LocalLogEntry
 import com.sixbynine.transit.path.ui.theme.PathTheme
 import com.sixbynine.transit.path.widget.DepartureBoardWidgetReceiver
 import com.sixbynine.transit.path.widget.configuration.DepartureBoardWidgetConfigurationActivity
+import dagger.hilt.android.AndroidEntryPoint
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
+@AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
+
+  private val viewModel: MainActivityViewModel by viewModels()
+  private var logsToDisplay: List<LocalLogEntry>? = null
+
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
+    setComposableContent()
+    if (IsLocalLoggingEnabled) {
+      viewModel.getLogs().observe(this) {
+        logsToDisplay = it
+        setComposableContent()
+      }
+    }
+  }
+
+  override fun onResume() {
+    super.onResume()
+    viewModel.refreshDisplayedLogs()
+  }
+
+  private fun setComposableContent() {
     setContent {
       Content()
     }
@@ -47,7 +77,25 @@ class MainActivity : AppCompatActivity() {
           verticalArrangement = Arrangement.Center,
           horizontalAlignment = Alignment.CenterHorizontally
         ) {
-          Spacer(modifier = Modifier.weight(1f))
+          val logsToDisplay = logsToDisplay
+          if (logsToDisplay != null) {
+            SelectionContainer(modifier = Modifier.weight(1f)) {
+              LazyColumn {
+                logsToDisplay.forEach { (_, timestamp, message, level) ->
+                  item {
+                    val levelDisplay = when (level) {
+                      Log.DEBUG -> "D"
+                      Log.WARN -> "W"
+                      else -> level.toString()
+                    }
+                    Text("${formatLogTimestamp(timestamp)}: $levelDisplay: $message")
+                  }
+                }
+              }
+            }
+          } else {
+            Spacer(modifier = Modifier.weight(1f))
+          }
 
           Text(
             text = stringResource(R.string.welcome_message),
@@ -122,5 +170,10 @@ class MainActivity : AppCompatActivity() {
       putExtra(Intent.EXTRA_SUBJECT, getString(R.string.app_name))
     }
     startActivity(intent)
+  }
+
+  private val logTimestampFormatter = DateTimeFormatter.ofPattern("dd HH:mm:ss")
+  private fun formatLogTimestamp(timestamp: Instant): String {
+    return logTimestampFormatter.format(timestamp.atZone(ZoneId.systemDefault()).toLocalDateTime())
   }
 }

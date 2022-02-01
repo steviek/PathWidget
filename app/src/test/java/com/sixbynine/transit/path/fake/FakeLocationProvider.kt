@@ -24,6 +24,8 @@ class FakeLocationProvider @Inject constructor(
   private var result: LocationCheckResult? = null
   private var noProvider = false
 
+  override var isLocationSupportedByDevice = true
+
   override suspend fun tryToGetLocation(timeout: Duration): LocationCheckResult {
     if (!permissionHelper.hasLocationPermission()) return LocationCheckResult.NoPermission
     return result ?: LocationCheckResult.Failure(RuntimeException())

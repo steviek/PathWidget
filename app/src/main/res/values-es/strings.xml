@@ -6,6 +6,8 @@
     <string name="choose_stations_configuration">Elegir las estaciones de mostrar en el widget</string>
     <string name="confirm">Confirmar</string>
     <string name="refresh">Recargar</string>
+    <string name="refreshing">Recargando…</string>
+    <string name="refreshing_short">…</string>
     <string name="no_internet">Sin Internet</string>
     <string name="failed_to_update">Un error se encontró</string>
     <string name="add_widget">Agregar el widget</string>
@@ -14,6 +16,8 @@
     <string name="and_or">y/o</string>
     <string name="credit">Esta app es posible gracias al API libre de Matthew Razza</string>
     <string name="report_problem">Informar sobre un problema</string>
-    <string name="complete_widget_setup">Finalizer el arreglo del widget</string>
+    <string name="complete_widget_setup">Arreglar el widget</string>
     <string name="edit">Configurar</string>
+    <string name="background_location_permission_title">¿Permitir accesso a la ubicación todo el tiempo?</string>Which station is considered the closest will only change whe
+    <string name="background_location_permission_message">Sin permiso de acceder a la ubicación todo el tiempo, el widget no poderia mantener cualquier estación es la más cercana, excepto por cuando pulsas el botón de recargar.\n\n¿Quieres dar permiso en Configuaración ahora?</string>
 </resources>

@@ -1,7 +1,6 @@
 package com.sixbynine.transit.path.station
 
 import com.google.common.truth.Truth.assertThat
-import com.sixbynine.transit.path.widget.DepartureBoardWidgetDataManager
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
 import org.junit.Before
