@@ -247,9 +247,18 @@ class DepartureBoardWidgetConfigurationActivity : AppCompatActivity() {
   private fun checkBackgroundLocationPermission(): Boolean {
     if (permissionHelper.hasBackgroundLocationPermission()) return false
 
+    val backgroundPermissionLabel = if (VERSION.SDK_INT >= 30) {
+      packageManager.backgroundPermissionOptionLabel
+    } else {
+      getString(R.string.background_location_permission_label_fallback)
+    }
+
+    val dialogMessage =
+      getString(R.string.background_location_permission_message, backgroundPermissionLabel)
+
     AlertDialog.Builder(this)
       .setTitle(R.string.background_location_permission_title)
-      .setMessage(R.string.background_location_permission_message)
+      .setMessage(dialogMessage)
       .setPositiveButton(android.R.string.ok) { _, _ ->
         if (prefs.getBoolean(KeyBackgroundLocationRequested, false)) {
           // If we've already asked, the API will just reject us immediately 🙄. Do the next
