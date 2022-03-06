@@ -12,12 +12,14 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import okhttp3.MediaType
 import retrofit2.Retrofit
+import retrofit2.awaitResponse
 import javax.inject.Inject
 
 interface TrainDataManager {
@@ -47,7 +49,6 @@ object PathDataServiceModule {
 }
 
 /** Wrapper around retrofit to provide coroutines. */
-// TODO: Handle cancellation properly
 class DefaultTrainDataManager @Inject internal constructor(
   private val service: PathDataService,
   private val logging: Logging
@@ -57,7 +58,7 @@ class DefaultTrainDataManager @Inject internal constructor(
   override suspend fun getStations(): Result<List<Station>> = withContext(Dispatchers.IO) {
     val response = try {
       withTimeout(2.seconds.toMillis()) {
-        service.getStations().execute()
+        service.getStations().awaitResponse()
       }
     } catch (t: Throwable) {
       return@withContext Result.failure(t)
@@ -76,7 +77,7 @@ class DefaultTrainDataManager @Inject internal constructor(
     withContext(Dispatchers.IO) {
       val response = try {
         withTimeout(2.seconds.toMillis()) {
-          service.getRealtimeArrivals(station.apiName).execute()
+          service.getRealtimeArrivals(station.apiName).awaitResponse()
         }
       } catch (e: TimeoutCancellationException) {
         logging.warn("Timed out trying to get upcoming trains")

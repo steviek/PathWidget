@@ -6,6 +6,7 @@ import android.content.Context
 import android.location.LocationManager
 import android.net.ConnectivityManager
 import androidx.glance.appwidget.GlanceAppWidgetManager
+import androidx.work.WorkManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -38,5 +39,14 @@ object SystemServiceModule {
   @Provides
   fun provideConnectivityManager(@ApplicationContext context: Context): ConnectivityManager {
     return context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+  }
+}
+
+@InstallIn(SingletonComponent::class)
+@Module
+object WorkManagerModule {
+  @Provides
+  fun provideWorkManager(@ApplicationContext context: Context): WorkManager {
+    return WorkManager.getInstance(context)
   }
 }

@@ -26,6 +26,7 @@ import androidx.glance.text.Text
 import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
+import androidx.work.WorkManager
 import com.sixbynine.transit.path.R
 import com.sixbynine.transit.path.R.color
 import com.sixbynine.transit.path.ktx.drawableBackground
@@ -133,12 +134,29 @@ class DepartureBoardWidgetReceiver : GlanceAppWidgetReceiver() {
   @Inject
   lateinit var widget: DepartureBoardWidget
 
+  @Inject
+  lateinit var workerScheduler: WidgetRefreshWorkerScheduler
+
   override val glanceAppWidget get() = widget
 
   override fun onReceive(context: Context, intent: Intent) {
     super.onReceive(context, intent)
     runBlocking {
       dataManager.updateData()
+    }
+  }
+
+  override fun onEnabled(context: Context) {
+    super.onEnabled(context)
+    runBlocking {
+      workerScheduler.schedulePeriodicRefresh()
+    }
+  }
+
+  override fun onDisabled(context: Context) {
+    super.onDisabled(context)
+    runBlocking {
+      workerScheduler.cancelPeriodicRefresh()
     }
   }
 }

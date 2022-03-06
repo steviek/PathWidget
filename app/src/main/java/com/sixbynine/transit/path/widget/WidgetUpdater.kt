@@ -3,6 +3,7 @@ package com.sixbynine.transit.path.widget
 import android.content.Context
 import android.net.ConnectivityManager
 import androidx.glance.GlanceId
+import androidx.work.WorkManager
 import com.sixbynine.transit.path.backend.TrainDataManager
 import com.sixbynine.transit.path.glance.GlanceIdProvider
 import com.sixbynine.transit.path.ktx.seconds
@@ -40,6 +41,7 @@ class WidgetUpdater @Inject internal constructor(
   private val widgetRefresher: WidgetRefresher,
   private val glanceIdProvider: GlanceIdProvider,
   private val connectivityManager: ConnectivityManager,
+  private val workerScheduler: WidgetRefreshWorkerScheduler,
   private val logging: Logging
 ) {
 
@@ -184,6 +186,12 @@ class WidgetUpdater @Inject internal constructor(
     ids.forEach { id ->
       savedWidgetDataManager.updateWidgetData(id, function)
       widgetRefresher.refreshWidget(id)
+    }
+
+    if (ids.isNotEmpty()) {
+      workerScheduler.schedulePeriodicRefresh()
+    } else {
+      workerScheduler.cancelPeriodicRefresh()
     }
   }
 

@@ -9,7 +9,9 @@ plugins {
 val composeVersion = "1.1.0-beta03"
 val glanceVersion = "1.0.0-alpha02"
 val hiltVersion = "2.40.5"
+val hiltWorkVersion = "1.0.0"
 val roomVersion = "2.4.1"
+val workVersion = "2.7.1"
 
 android {
   compileSdk = 31
@@ -75,6 +77,12 @@ dependencies {
   implementation("androidx.room:room-runtime:$roomVersion")
   kapt("androidx.room:room-compiler:$roomVersion")
   implementation("androidx.room:room-ktx:$roomVersion")
+
+  implementation("androidx.work:work-runtime:$workVersion")
+  implementation("androidx.work:work-runtime-ktx:$workVersion")
+  testImplementation("androidx.work:work-testing:$workVersion")
+  implementation("androidx.hilt:hilt-work:$hiltWorkVersion")
+  kapt("androidx.hilt:hilt-compiler:$hiltWorkVersion")
 
   coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:1.1.5")
 
