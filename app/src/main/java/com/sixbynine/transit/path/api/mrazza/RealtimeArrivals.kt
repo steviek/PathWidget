@@ -1,4 +1,4 @@
-package com.sixbynine.transit.path.api
+package com.sixbynine.transit.path.api.mrazza
 
 import android.graphics.Color
 import kotlinx.serialization.SerialName

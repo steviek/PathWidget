@@ -29,8 +29,8 @@ import androidx.glance.layout.width
 import androidx.glance.visibility
 import com.sixbynine.transit.path.R
 import com.sixbynine.transit.path.R.color
-import com.sixbynine.transit.path.api.Station
 import com.sixbynine.transit.path.ktx.toColor
+import com.sixbynine.transit.path.model.Station
 import com.sixbynine.transit.path.time.DateTimeFormatter
 
 @Composable
@@ -53,13 +53,13 @@ fun DepartureList(data: DepartureBoardWidgetData, modifier: GlanceModifier) {
       .sortedWith { first, second ->
         // Make sure the closest station is always the first to appear in the list.
         when (data.loadedData.closestStation) {
-          first.apiName -> -1
-          second.apiName -> 1
+          first.mRazzaApiName -> -1
+          second.mRazzaApiName -> 1
           else -> 0
         }
       }
-      .distinctBy { it.apiName }
-      .filter { it.apiName in stationsForWidget }
+      .distinctBy { it.mRazzaApiName }
+      .filter { it.mRazzaApiName in stationsForWidget }
       .forEach { station ->
         item {
           StationDepartures(data.loadedData, station)
@@ -72,7 +72,7 @@ fun DepartureList(data: DepartureBoardWidgetData, modifier: GlanceModifier) {
 fun StationDepartures(data: LoadedWidgetData, station: Station) {
   val context = LocalContext.current
   val allTrains =
-    data.stationToTrains.filterKeys { it.apiName == station.apiName }.flatMap { it.value }
+    data.stationToTrains.filterKeys { it.mRazzaApiName == station.mRazzaApiName }.flatMap { it.value }
   Column(
     modifier = GlanceModifier
       .padding(horizontal = 16.dp)

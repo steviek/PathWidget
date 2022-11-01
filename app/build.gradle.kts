@@ -21,8 +21,8 @@ android {
     applicationId = "com.sixbynine.transit.path"
     minSdk = 21
     targetSdk = 31
-    versionCode = 9
-    versionName = "2022.02.01"
+    versionCode = 10
+    versionName = "2022.03.06"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }

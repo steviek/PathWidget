@@ -56,9 +56,6 @@ import javax.inject.Inject
 class DepartureBoardWidgetConfigurationActivity : AppCompatActivity() {
 
   @Inject
-  lateinit var stationLister: StationLister
-
-  @Inject
   lateinit var permissionHelper: PermissionHelper
 
   @Inject
@@ -164,19 +161,19 @@ class DepartureBoardWidgetConfigurationActivity : AppCompatActivity() {
           )
 
           var selectedStations by remember { mutableStateOf(emptySet<String>()) }
-          stationLister
+          StationLister
             .getStations()
-            .distinctBy { it.apiName }
+            .distinctBy { it.mRazzaApiName }
             .sortedWith(StationByDisplayNameComparator)
             .forEach { station ->
               CheckBoxRow(
-                isChecked = station.apiName in selectedStations,
+                isChecked = station.mRazzaApiName in selectedStations,
                 text = station.displayName,
                 onCheckedChange = { isChecked ->
                   selectedStations = if (isChecked) {
-                    selectedStations + station.apiName
+                    selectedStations + station.mRazzaApiName
                   } else {
-                    selectedStations - station.apiName
+                    selectedStations - station.mRazzaApiName
                   }
                 }
               )

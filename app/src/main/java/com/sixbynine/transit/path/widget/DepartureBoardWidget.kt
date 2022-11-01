@@ -26,7 +26,6 @@ import androidx.glance.text.Text
 import androidx.glance.text.TextAlign
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
-import androidx.work.WorkManager
 import com.sixbynine.transit.path.R
 import com.sixbynine.transit.path.R.color
 import com.sixbynine.transit.path.ktx.drawableBackground

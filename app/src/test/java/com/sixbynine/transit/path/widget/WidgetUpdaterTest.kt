@@ -1,14 +1,10 @@
 package com.sixbynine.transit.path.widget
 
 import android.appwidget.AppWidgetManager
-import android.content.ComponentName
-import android.content.Context
-import android.location.LocationManager
 import android.net.ConnectivityManager
 import android.view.View
 import android.view.View.FIND_VIEWS_WITH_TEXT
 import androidx.glance.appwidget.GlanceAppWidgetManager
-import androidx.test.core.app.ApplicationProvider
 import com.google.common.truth.Truth.assertThat
 import com.sixbynine.transit.path.api.DATE_TIME_FORMATTER
 import com.sixbynine.transit.path.api.Station
@@ -166,7 +162,7 @@ class WidgetUpdaterTest {
   }
 
   private fun getStation(apiName: String): Station {
-    return stationLister.getStations().first { it.apiName == apiName }
+    return stationLister.getStations().first { it.mRazzaApiName == apiName }
   }
 
   private fun LocalDateTime.toInstant() = atZone(ZoneId.systemDefault()).toInstant()

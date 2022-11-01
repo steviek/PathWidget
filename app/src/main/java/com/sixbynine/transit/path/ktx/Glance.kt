@@ -1,6 +1,5 @@
 package com.sixbynine.transit.path.ktx
 
-import android.content.ComponentName
 import androidx.annotation.DrawableRes
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier

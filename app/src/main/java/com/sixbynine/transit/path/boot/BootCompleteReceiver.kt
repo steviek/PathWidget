@@ -8,6 +8,8 @@ import android.content.SharedPreferences
 /** Listener for boot complete to track boot count on pre-24 devices. */
 class BootCompleteReceiver : BroadcastReceiver() {
   override fun onReceive(context: Context, intent: Intent) {
+    if (intent.action != Intent.ACTION_BOOT_COMPLETED) return
+
     val prefs = getPrefs(context)
     val previousBootCount = prefs.getInt(BootCountKey, 0)
     prefs.edit().putInt(BootCountKey, previousBootCount + 1).apply()

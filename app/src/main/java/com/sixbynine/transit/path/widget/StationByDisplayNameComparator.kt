@@ -1,6 +1,6 @@
 package com.sixbynine.transit.path.widget
 
-import com.sixbynine.transit.path.api.Station
+import com.sixbynine.transit.path.model.Station
 
 /** Comparator that sorts [Station]s by their display names. */
 object StationByDisplayNameComparator : Comparator<Station> {

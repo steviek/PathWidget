@@ -3,7 +3,6 @@ package com.sixbynine.transit.path.widget
 import android.content.Context
 import android.net.ConnectivityManager
 import androidx.glance.GlanceId
-import androidx.work.WorkManager
 import com.sixbynine.transit.path.backend.TrainDataManager
 import com.sixbynine.transit.path.glance.GlanceIdProvider
 import com.sixbynine.transit.path.ktx.seconds
@@ -33,7 +32,6 @@ class WidgetUpdater @Inject internal constructor(
   @ApplicationContext private val context: Context,
   private val trainDataManager: TrainDataManager,
   private val locationProvider: LocationProvider,
-  private val stationLister: StationLister,
   private val bootTimestampProvider: BootTimestampProvider,
   private val elapsedRealtimeProvider: ElapsedRealtimeProvider,
   private val timeSource: TimeSource,
@@ -103,9 +101,9 @@ class WidgetUpdater @Inject internal constructor(
         is Success -> {
           val location = locationResult.location
           val closestStation =
-            stationLister.getClosestStation(location.latitude, location.longitude)
+            StationLister.getClosestStation(location.latitude, location.longitude)
           logging.debug("The closest station is ${closestStation.displayName}")
-          closestStationName = closestStation.apiName
+          closestStationName = closestStation.mRazzaApiName
           stationsToCheck += closestStationName
         }
       }.let {}
@@ -115,11 +113,11 @@ class WidgetUpdater @Inject internal constructor(
     // we're connected to the internet so we can use that to choose an error message to display.
     val hasInternet = isOnline
     var anyError = false
-    val stations = stationLister.getStations()
+    val stations = StationLister.getStations()
     val stationsAndTrains =
       stations
-        .filter { it.apiName in stationsToCheck }
-        .distinctBy { it.apiName }
+        .filter { it.mRazzaApiName in stationsToCheck }
+        .distinctBy { it.mRazzaApiName }
         .mapNotNull { station ->
           if (!isOnline) {
             anyError = true

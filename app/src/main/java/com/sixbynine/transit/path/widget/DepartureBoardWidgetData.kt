@@ -1,7 +1,7 @@
 package com.sixbynine.transit.path.widget
 
-import com.sixbynine.transit.path.api.Station
-import com.sixbynine.transit.path.api.UpcomingTrain
+import com.sixbynine.transit.path.api.mrazza.UpcomingTrain
+import com.sixbynine.transit.path.model.Station
 import com.sixbynine.transit.path.time.BootTimestamp
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
