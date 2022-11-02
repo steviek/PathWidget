@@ -1,6 +1,6 @@
 package com.sixbynine.transit.path.widget
 
-import com.sixbynine.transit.path.api.mrazza.UpcomingTrain
+import com.sixbynine.transit.path.model.DepartureBoardTrain
 import com.sixbynine.transit.path.model.Station
 import com.sixbynine.transit.path.time.BootTimestamp
 import kotlinx.serialization.Serializable
@@ -30,7 +30,7 @@ data class LastRefreshData(
 
 @Serializable
 data class LoadedWidgetData(
-  private val stationAndTrains: List<Pair<Station, List<UpcomingTrain>>>,
+  private val stationAndTrains: List<Pair<Station, List<DepartureBoardTrain>>>,
   private val updateTimeMillis: Long,
   val closestStation: String? = null
 ) {
@@ -38,5 +38,5 @@ data class LoadedWidgetData(
   val updateTime = Instant.ofEpochMilli(updateTimeMillis)!!
 
   @Transient
-  val stationToTrains: Map<Station, List<UpcomingTrain>> = stationAndTrains.toMap()
+  val stationToTrains: Map<Station, List<DepartureBoardTrain>> = stationAndTrains.toMap()
 }

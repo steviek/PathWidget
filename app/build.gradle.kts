@@ -41,7 +41,11 @@ android {
   kotlinOptions {
     jvmTarget = JavaVersion.VERSION_1_8.toString()
     freeCompilerArgs =
-      freeCompilerArgs + listOf("-Xopt-in=kotlinx.serialization.ExperimentalSerializationApi")
+      freeCompilerArgs + listOf(
+        "-Xopt-in=kotlinx.serialization.ExperimentalSerializationApi",
+        "-Xopt-in=kotlin.time.ExperimentalTime",
+        "-Xcontext-receivers"
+      )
   }
   buildFeatures {
     compose = true

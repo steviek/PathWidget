@@ -10,11 +10,13 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 
 @Dao
 interface LocalLogDao {
-  @Query("SELECT * FROM ${Tables.LOCAL_LOGS}")
-  suspend fun getAll(): List<LocalLogEntry>
+  @Query("SELECT * FROM ${Tables.LOCAL_LOGS} ORDER BY timestamp DESC")
+  fun flowAll(): Flow<List<LocalLogEntry>>
 
   @Insert
   suspend fun insert(vararg entries: LocalLogEntry)
@@ -29,8 +31,8 @@ object LocalLogDaoProvisionModule {
       // We only use this database in debug builds. Return a no-op version of the DAO and avoid
       // creating the db.
       return object: LocalLogDao {
-        override suspend fun getAll(): List<LocalLogEntry> {
-          return listOf()
+        override fun flowAll(): Flow<List<LocalLogEntry>> {
+          return flowOf(emptyList())
         }
 
         override suspend fun insert(vararg entries: LocalLogEntry) {}

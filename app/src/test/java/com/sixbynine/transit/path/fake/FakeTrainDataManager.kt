@@ -1,9 +1,9 @@
 package com.sixbynine.transit.path.fake
 
-import com.sixbynine.transit.path.api.Station
-import com.sixbynine.transit.path.api.UpcomingTrain
 import com.sixbynine.transit.path.backend.TrainDataManager
 import com.sixbynine.transit.path.backend.TrainDataManagerModule
+import com.sixbynine.transit.path.model.DepartureBoardTrain
+import com.sixbynine.transit.path.model.Station
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.components.SingletonComponent
@@ -13,22 +13,27 @@ import javax.inject.Singleton
 
 @Singleton
 class FakeTrainDataManager @Inject constructor(): TrainDataManager {
-  private val stationToTrain = mutableMapOf<String, Result<List<UpcomingTrain>>>()
+  private val stationToTrain = mutableMapOf<String,List<DepartureBoardTrain>>()
+  private var hasFailure = false
 
-  override suspend fun getStations(): Result<List<Station>> {
-    return Result.failure(UnsupportedOperationException())
+  override suspend fun getUpcomingTrains(
+    stations: List<Station>
+  ): Result<Map<Station, List<DepartureBoardTrain>>> {
+    if (hasFailure) {
+      return Result.failure(RuntimeException())
+    }
+    return stations.associateWith {
+      stationToTrain[it.mRazzaApiName] ?: return Result.failure(RuntimeException())
+    }.let { Result.success(it) }
   }
 
-  override suspend fun getUpcomingTrains(station: Station): Result<List<UpcomingTrain>> {
-    return stationToTrain[station.apiName] ?: Result.failure(UnsupportedOperationException())
+  fun setUpcomingTrains(stationName: String, trains: List<DepartureBoardTrain>) {
+    stationToTrain[stationName] = trains
+    hasFailure = false
   }
 
-  fun setUpcomingTrains(stationName: String, trains: List<UpcomingTrain>) {
-    stationToTrain[stationName] = Result.success(trains)
-  }
-
-  fun setUpcomingTrainsFailed(stationName: String) {
-    stationToTrain[stationName] = Result.failure(RuntimeException())
+  fun setUpcomingTrainsFailed() {
+    hasFailure = true
   }
 }
 

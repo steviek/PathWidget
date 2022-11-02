@@ -111,12 +111,12 @@ class ClickFooterAction : ActionCallback {
   override suspend fun onRun(context: Context, glanceId: GlanceId, parameters: ActionParameters) {
     val entryPoint =
       EntryPoints.get(context.applicationContext, ClickFooterActionEntryPoint::class.java)
-    entryPoint.widgetUpdater.updateData()
+    entryPoint.widgetRefreshScheduler.performOneTimeRefresh()
   }
 }
 
 @EntryPoint
 @InstallIn(SingletonComponent::class)
 interface ClickFooterActionEntryPoint {
-  val widgetUpdater: WidgetUpdater
+  val widgetRefreshScheduler: WidgetRefreshWorkerScheduler
 }

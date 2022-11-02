@@ -32,6 +32,9 @@ class GlanceAppWidgetStateSavedWidgetDataManager @Inject constructor(
 ) : SavedWidgetDataManager {
   override suspend fun getWidgetData(id: GlanceId): DepartureBoardWidgetData? {
     val state = getAppWidgetState(context, PreferencesGlanceStateDefinition, id)
+
+    if (state[HAS_NEW_WIDGET_DATA_FORMAT] != true) return null
+
     return state[DEPARTURE_WIDGET_PREFS_KEY]?.let {
       JsonFormat.decodeFromString<DepartureBoardWidgetData>(it)
     }
@@ -46,6 +49,7 @@ class GlanceAppWidgetStateSavedWidgetDataManager @Inject constructor(
     updateAppWidgetState(context, PreferencesGlanceStateDefinition, id) { newState ->
       newState.toMutablePreferences()
         .apply {
+          this[HAS_NEW_WIDGET_DATA_FORMAT] = true
           this[DEPARTURE_WIDGET_PREFS_KEY] = JsonFormat.encodeToString(function(previousData))
         }
     }

@@ -11,6 +11,7 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.glance.*
 import androidx.glance.action.Action
@@ -55,7 +56,9 @@ class DepartureBoardWidget @Inject internal constructor(
   override fun Content() {
     val prefs = currentState<Preferences>()
     val widgetData: DepartureBoardWidgetData? =
-      prefs[DEPARTURE_WIDGET_PREFS_KEY]?.let { JsonFormat.decodeFromString(it) }
+      prefs[DEPARTURE_WIDGET_PREFS_KEY]
+        ?.takeIf { prefs[HAS_NEW_WIDGET_DATA_FORMAT] == true }
+        ?.let { JsonFormat.decodeFromString(it) }
 
     Column(
       modifier = GlanceModifier.drawableBackground(R.drawable.widget_background).fillMaxSize(),
@@ -161,6 +164,7 @@ class DepartureBoardWidgetReceiver : GlanceAppWidgetReceiver() {
 }
 
 val DEPARTURE_WIDGET_PREFS_KEY = stringPreferencesKey("departure_widget_data")
+val HAS_NEW_WIDGET_DATA_FORMAT = booleanPreferencesKey("has_new_widget_data_format")
 
 @Composable
 fun startConfigurationActivityAction(): Action {

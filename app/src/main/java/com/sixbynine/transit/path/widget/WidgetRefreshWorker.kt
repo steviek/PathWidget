@@ -2,19 +2,25 @@ package com.sixbynine.transit.path.widget
 
 import android.content.Context
 import androidx.hilt.work.HiltWorker
+import androidx.work.BackoffPolicy.EXPONENTIAL
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy.KEEP
+import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType.UNMETERED
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkRequest
 import androidx.work.WorkerParameters
 import androidx.work.await
 import com.sixbynine.transit.path.ktx.minutes
+import com.sixbynine.transit.path.ktx.seconds
 import com.sixbynine.transit.path.logging.Logging
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import java.util.concurrent.TimeUnit.SECONDS
 import javax.inject.Inject
 
 @HiltWorker
@@ -26,24 +32,31 @@ class WidgetRefreshWorker @AssistedInject constructor(
 ) : CoroutineWorker(context, params) {
   override suspend fun doWork(): Result {
     logging.debug("Start widget refresh worker")
-    widgetUpdater.updateData()
-    logging.debug("Finish widget refresh worker")
-    return Result.success()
+    val updateSucceeded = widgetUpdater.updateData()
+    return if (updateSucceeded) {
+      logging.debug("Widget refresh succeeded")
+      Result.success()
+    } else {
+      logging.debug("Widget refresh failed, retrying eventually")
+      Result.retry()
+    }
   }
 }
 
 class WidgetRefreshWorkerScheduler @Inject constructor(
   private val workManager: WorkManager
 ) {
+  private val constraints = Constraints.Builder()
+    .setRequiresBatteryNotLow(true)
+    .setRequiredNetworkType(UNMETERED)
+    .build()
+
   suspend fun schedulePeriodicRefresh() {
     // Start off conservative, and only update periodically if on WiFi and the battery isn't low
     // to save the user's data and battery life.
-    val constraints = Constraints.Builder()
-      .setRequiresBatteryNotLow(true)
-      .setRequiredNetworkType(UNMETERED)
-      .build()
     val workRequest = PeriodicWorkRequestBuilder<WidgetRefreshWorker>(15.minutes)
       .setConstraints(constraints)
+      .setBackoffCriteria(EXPONENTIAL, 10, SECONDS)
       .build()
     workManager.enqueueUniquePeriodicWork(WORK_TAG, KEEP, workRequest).result.await()
   }
@@ -52,8 +65,19 @@ class WidgetRefreshWorkerScheduler @Inject constructor(
     workManager.cancelUniqueWork(WORK_TAG).result.await()
   }
 
+  suspend fun performOneTimeRefresh() {
+    val workRequest = OneTimeWorkRequestBuilder<WidgetRefreshWorker>()
+      .setBackoffCriteria(EXPONENTIAL, 10, SECONDS)
+      .setExpedited(/* policy = */ RUN_AS_NON_EXPEDITED_WORK_REQUEST)
+      .build()
+    workManager.enqueueUniqueWork(ONE_TIME_WORK_TAG, ExistingWorkPolicy.KEEP, workRequest)
+      .result
+      .await()
+  }
+
   private companion object {
     const val WORK_TAG = "path_widget_refresh"
+    const val ONE_TIME_WORK_TAG = "path_widget_refresh_one_time"
   }
 }
 

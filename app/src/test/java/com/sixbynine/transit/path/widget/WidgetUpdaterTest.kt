@@ -1,20 +1,20 @@
 package com.sixbynine.transit.path.widget
 
 import android.appwidget.AppWidgetManager
+import android.graphics.Color
 import android.net.ConnectivityManager
 import android.view.View
 import android.view.View.FIND_VIEWS_WITH_TEXT
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import com.google.common.truth.Truth.assertThat
-import com.sixbynine.transit.path.api.DATE_TIME_FORMATTER
-import com.sixbynine.transit.path.api.Station
-import com.sixbynine.transit.path.api.UpcomingTrain
 import com.sixbynine.transit.path.fake.FakeGlanceIdProvider
 import com.sixbynine.transit.path.fake.FakeTimeSource
 import com.sixbynine.transit.path.fake.FakeTrainDataManager
 import com.sixbynine.transit.path.fake.TestGlanceId
 import com.sixbynine.transit.path.fake.TestWidgetRefresher
 import com.sixbynine.transit.path.ktx.minutes
+import com.sixbynine.transit.path.model.DepartureBoardTrain
+import com.sixbynine.transit.path.model.Station
 import com.sixbynine.transit.path.station.StationLister
 import com.sixbynine.transit.path.util.runBlockingTest
 import dagger.hilt.android.testing.HiltAndroidRule
@@ -27,7 +27,6 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
 import java.time.LocalDateTime
 import java.time.ZoneId
-import java.time.ZoneOffset
 import javax.inject.Inject
 import kotlin.test.assertNotNull
 
@@ -60,9 +59,6 @@ class WidgetUpdaterTest {
 
   @Inject
   lateinit var timeSource: FakeTimeSource
-
-  @Inject
-  lateinit var stationLister: StationLister
 
   @Inject
   lateinit var connectivityManager: ConnectivityManager
@@ -103,7 +99,7 @@ class WidgetUpdaterTest {
   fun updateData_callFails_shouldRefreshWidgetData() = runBlockingTest {
     timeSource.setNow(JAN_17_5_PM)
     configureWidget(EXCHANGE_PLACE)
-    trainDataManager.setUpcomingTrainsFailed(EXCHANGE_PLACE)
+    trainDataManager.setUpcomingTrainsFailed()
 
     updater.updateData()
 
@@ -120,7 +116,7 @@ class WidgetUpdaterTest {
     timeSource.setNow(JAN_17_5_PM)
     configureWidget(EXCHANGE_PLACE)
     shadowOf(connectivityManager).setActiveNetworkInfo(null)
-    trainDataManager.setUpcomingTrainsFailed(EXCHANGE_PLACE)
+    trainDataManager.setUpcomingTrainsFailed()
 
     updater.updateData()
 
@@ -141,17 +137,11 @@ class WidgetUpdaterTest {
     }
   }
 
-  private fun wtcBoundTrain(arrivalTime: LocalDateTime): UpcomingTrain {
-    return UpcomingTrain(
-      lineName = "World Trade Center",
+  private fun wtcBoundTrain(arrivalTime: LocalDateTime): DepartureBoardTrain {
+    return DepartureBoardTrain(
       headsign = "World Trade Center",
-      route = "NWK_WTC",
-      routeDisplayName = "Newark - World Trade Center",
-      direction = "TO_NY",
-      rawLineColors = listOf("#D93A30"),
-      rawProjectedArrival = DATE_TIME_FORMATTER.format(
-        arrivalTime.atZone(ZoneId.systemDefault()).toInstant().atZone(ZoneOffset.UTC)
-      )
+      projectedArrival = arrivalTime.atZone(ZoneId.systemDefault()).toInstant(),
+      lineColors = listOf(Color.parseColor("#D93A30"))
     )
   }
 
@@ -162,7 +152,7 @@ class WidgetUpdaterTest {
   }
 
   private fun getStation(apiName: String): Station {
-    return stationLister.getStations().first { it.mRazzaApiName == apiName }
+    return StationLister.getStations().first { it.mRazzaApiName == apiName }
   }
 
   private fun LocalDateTime.toInstant() = atZone(ZoneId.systemDefault()).toInstant()
