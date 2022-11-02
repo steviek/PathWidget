@@ -14,15 +14,15 @@ val roomVersion = "2.4.1"
 val workVersion = "2.7.1"
 
 android {
-  compileSdk = 31
-  buildToolsVersion = "30.0.3"
+  compileSdk = 33
+  buildToolsVersion = "33.0.0"
 
   defaultConfig {
     applicationId = "com.sixbynine.transit.path"
     minSdk = 21
-    targetSdk = 31
-    versionCode = 10
-    versionName = "2022.03.06"
+    targetSdk = 33
+    versionCode = 11
+    versionName = "2022.11.02"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }

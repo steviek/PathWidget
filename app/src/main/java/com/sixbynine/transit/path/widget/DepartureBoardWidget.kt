@@ -144,7 +144,7 @@ class DepartureBoardWidgetReceiver : GlanceAppWidgetReceiver() {
   override fun onReceive(context: Context, intent: Intent) {
     super.onReceive(context, intent)
     runBlocking {
-      dataManager.updateData()
+      workerScheduler.performOneTimeRefresh()
     }
   }
 
