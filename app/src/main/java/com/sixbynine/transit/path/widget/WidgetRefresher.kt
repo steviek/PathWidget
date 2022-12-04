@@ -13,21 +13,21 @@ import dagger.hilt.components.SingletonComponent
 import javax.inject.Inject
 
 interface WidgetRefresher {
-  suspend fun refreshWidget(id: GlanceId)
+    suspend fun refreshWidget(id: GlanceId)
 }
 
 class DefaultWidgetRefresher @Inject constructor(
-  @ApplicationContext private val context: Context,
-  private val widget: DepartureBoardWidget,
+    @ApplicationContext private val context: Context,
+    private val widget: DepartureBoardWidget,
 ) : WidgetRefresher {
-  override suspend fun refreshWidget(id: GlanceId) {
-    widget.update(context, id)
-  }
+    override suspend fun refreshWidget(id: GlanceId) {
+        widget.update(context, id)
+    }
 }
 
 @InstallIn(SingletonComponent::class)
 @Module
 interface WidgetRefresherModule {
-  @Binds
-  fun bindWidgetRefresher(refresher: DefaultWidgetRefresher): WidgetRefresher
+    @Binds
+    fun bindWidgetRefresher(refresher: DefaultWidgetRefresher): WidgetRefresher
 }

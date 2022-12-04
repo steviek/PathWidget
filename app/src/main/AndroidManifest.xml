@@ -50,13 +50,6 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/departure_widget" />
         </receiver>
-        <receiver android:name=".boot.BootCompleteReceiver"
-            android:exported="false"
-            android:enabled="@bool/is_pre_24">
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
-            </intent-filter>
-        </receiver>
 
         <provider
             android:name="androidx.startup.InitializationProvider"

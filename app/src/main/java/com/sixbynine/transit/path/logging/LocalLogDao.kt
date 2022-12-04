@@ -15,31 +15,31 @@ import kotlinx.coroutines.flow.flowOf
 
 @Dao
 interface LocalLogDao {
-  @Query("SELECT * FROM ${Tables.LOCAL_LOGS} ORDER BY timestamp DESC")
-  fun flowAll(): Flow<List<LocalLogEntry>>
+    @Query("SELECT * FROM ${Tables.LOCAL_LOGS} ORDER BY timestamp DESC")
+    fun flowAll(): Flow<List<LocalLogEntry>>
 
-  @Insert
-  suspend fun insert(vararg entries: LocalLogEntry)
+    @Insert
+    suspend fun insert(vararg entries: LocalLogEntry)
 }
 
 @InstallIn(SingletonComponent::class)
 @Module
 object LocalLogDaoProvisionModule {
-  @Provides
-  fun provideLocalLogDao(@ApplicationContext context: Context): LocalLogDao {
-    if (!IsLocalLoggingEnabled) {
-      // We only use this database in debug builds. Return a no-op version of the DAO and avoid
-      // creating the db.
-      return object: LocalLogDao {
-        override fun flowAll(): Flow<List<LocalLogEntry>> {
-          return flowOf(emptyList())
-        }
+    @Provides
+    fun provideLocalLogDao(@ApplicationContext context: Context): LocalLogDao {
+        if (!IsLocalLoggingEnabled) {
+            // We only use this database in debug builds. Return a no-op version of the DAO and avoid
+            // creating the db.
+            return object : LocalLogDao {
+                override fun flowAll(): Flow<List<LocalLogEntry>> {
+                    return flowOf(emptyList())
+                }
 
-        override suspend fun insert(vararg entries: LocalLogEntry) {}
-      }
+                override suspend fun insert(vararg entries: LocalLogEntry) {}
+            }
+        }
+        return Room.databaseBuilder(context, LocalLogDatabase::class.java, Databases.DEBUG_LOG_DB)
+            .build()
+            .localLogDao()
     }
-    return Room.databaseBuilder(context, LocalLogDatabase::class.java, Databases.DEBUG_LOG_DB)
-      .build()
-      .localLogDao()
-  }
 }

@@ -21,9 +21,4 @@ class CancelRefreshWorker @AssistedInject constructor(
         widgetUpdater.failRefreshingWidgets()
         return Result.success()
     }
-
-    private companion object {
-        const val WORK_TAG = "path_widget_fail_refresh"
-        const val ONE_TIME_WORK_TAG = "path_widget_fail_refresh_one_time"
-    }
 }

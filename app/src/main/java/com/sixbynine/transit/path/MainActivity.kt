@@ -11,7 +11,13 @@ import android.util.Log
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.Button
@@ -24,23 +30,16 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextAlign.Companion
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
-import com.sixbynine.transit.path.logging.IsLocalLoggingEnabled
-import com.sixbynine.transit.path.logging.LocalLogEntry
 import com.sixbynine.transit.path.ui.theme.PathTheme
 import com.sixbynine.transit.path.widget.DepartureBoardWidgetReceiver
 import com.sixbynine.transit.path.widget.WidgetRefreshWorkerScheduler
-import com.sixbynine.transit.path.widget.WidgetRefresher
-import com.sixbynine.transit.path.widget.WidgetUpdater
 import com.sixbynine.transit.path.widget.configuration.DepartureBoardWidgetConfigurationActivity
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.ZoneId
@@ -160,15 +159,15 @@ class MainActivity : AppCompatActivity() {
         val configurationPendingIntent =
             PendingIntent.getActivity(
                 this,
-                /* requestCode= */ 0,
+                /* requestCode = */ 0,
                 configurationIntent,
                 PendingIntent.FLAG_MUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
             )
 
         appWidgetManager.requestPinAppWidget(
             ComponentName(this, DepartureBoardWidgetReceiver::class.java),
-            /* extra= */ null,
-            /* successCallback= */ configurationPendingIntent
+            /* extras = */ null,
+            /* successCallback = */ configurationPendingIntent
         )
     }
 

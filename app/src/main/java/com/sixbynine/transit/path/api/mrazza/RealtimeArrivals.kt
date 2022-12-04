@@ -24,8 +24,8 @@ data class UpcomingTrain(
     @SerialName("lineColors") private val rawLineColors: List<String>
 ) {
 
-  @Transient
-  val lineColors = rawLineColors.map { Color.parseColor(it) }
+    @Transient
+    val lineColors = rawLineColors.map { Color.parseColor(it) }
 }
 
 private object InstantAsIsoStringSerializer : KSerializer<Instant> {

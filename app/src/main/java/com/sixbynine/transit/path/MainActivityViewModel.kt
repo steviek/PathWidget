@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 
 @HiltViewModel
-class MainActivityViewModel @Inject constructor(localLogDao: LocalLogDao): ViewModel() {
+class MainActivityViewModel @Inject constructor(localLogDao: LocalLogDao) : ViewModel() {
 
-  val logs = localLogDao.flowAll().stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+    val logs = localLogDao.flowAll().stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 }

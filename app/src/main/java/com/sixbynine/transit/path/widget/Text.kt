@@ -13,39 +13,39 @@ import com.sixbynine.transit.path.R.color
 
 @Composable
 fun PrimaryText(
-  text: String,
-  fontSize: TextUnit,
-  maxLines: Int = Int.MAX_VALUE,
-  modifier: GlanceModifier = GlanceModifier,
-  textAlign: TextAlign? = null,
+    text: String,
+    fontSize: TextUnit,
+    maxLines: Int = Int.MAX_VALUE,
+    modifier: GlanceModifier = GlanceModifier,
+    textAlign: TextAlign? = null,
 ) {
-  Text(
-    text = text,
-    style = TextStyle(
-      fontSize = fontSize,
-      fontWeight = FontWeight.Bold,
-      color = ColorProvider(color.widget_text_primary),
-      textAlign = textAlign
-    ),
-    maxLines = maxLines,
-    modifier = modifier,
-  )
+    Text(
+        text = text,
+        style = TextStyle(
+            fontSize = fontSize,
+            fontWeight = FontWeight.Bold,
+            color = ColorProvider(color.widget_text_primary),
+            textAlign = textAlign
+        ),
+        maxLines = maxLines,
+        modifier = modifier,
+    )
 }
 
 @Composable
 fun SecondaryText(
-  text: String,
-  fontSize: TextUnit,
-  modifier: GlanceModifier = GlanceModifier,
-  textStyle: TextStyle = TextStyle()
+    text: String,
+    fontSize: TextUnit,
+    modifier: GlanceModifier = GlanceModifier,
+    textStyle: TextStyle = TextStyle()
 ) {
-  Text(
-    text = text,
-    style = TextStyle(
-      fontSize = fontSize,
-      color = ColorProvider(color.widget_text_secondary),
-      textAlign = textStyle.textAlign
-    ),
-    modifier = modifier
-  )
+    Text(
+        text = text,
+        style = TextStyle(
+            fontSize = fontSize,
+            color = ColorProvider(color.widget_text_secondary),
+            textAlign = textStyle.textAlign
+        ),
+        modifier = modifier
+    )
 }

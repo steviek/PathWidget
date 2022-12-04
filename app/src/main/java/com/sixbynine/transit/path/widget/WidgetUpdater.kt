@@ -1,6 +1,5 @@
 package com.sixbynine.transit.path.widget
 
-import android.content.Context
 import android.net.ConnectivityManager
 import androidx.glance.GlanceId
 import com.sixbynine.transit.path.backend.TrainDataManager
@@ -17,12 +16,9 @@ import com.sixbynine.transit.path.time.BootTimestampProvider
 import com.sixbynine.transit.path.time.ElapsedRealtimeProvider
 import com.sixbynine.transit.path.time.TimeSource
 import com.sixbynine.transit.path.time.millis
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.Duration
 import javax.inject.Inject
@@ -31,7 +27,6 @@ import javax.inject.Singleton
 /** Manages updating the configuration or displayed data for a widget. */
 @Singleton
 class WidgetUpdater @Inject internal constructor(
-    @ApplicationContext private val context: Context,
     private val trainDataManager: TrainDataManager,
     private val locationProvider: LocationProvider,
     private val bootTimestampProvider: BootTimestampProvider,
