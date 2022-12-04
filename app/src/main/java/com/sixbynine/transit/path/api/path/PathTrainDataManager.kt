@@ -19,23 +19,34 @@ class PathTrainDataManager @Inject constructor(
             return Result.failure(it)
         }
 
+        logging.debug("Finished getting response from path service")
+
         val stationsToCheck = stations.associateBy { it.pathApiName }
-        return results.results.mapNotNull { result ->
-            val station = stationsToCheck[result.consideredStation] ?: return@mapNotNull null
+        logging.debug("building stations to check done")
+        return kotlin.runCatching {
+            results.results.mapNotNull { result ->
+                val station = stationsToCheck[result.consideredStation] ?: return@mapNotNull null
 
-            val trains = result.destinations
-                .flatMap { it.messages }
-                .map {
-                    DepartureBoardTrain.withRawColors(
-                        headsign = it.headSign,
-                        projectedArrival = (it.lastUpdated + it.durationToArrival)
-                            .coerceAtLeast(Instant.now()),
-                        lineColors = listOf("#" + it.lineColor)
-                    )
+                val trains = result.destinations
+                    .flatMap { it.messages }
+                    .map {
+                        DepartureBoardTrain.withRawColors(
+                            headsign = it.headSign,
+                            projectedArrival = (it.lastUpdated + it.durationToArrival)
+                                .coerceAtLeast(Instant.now()),
+                            lineColors = it.lineColor.split(',').map { "#$it" }
+                        )
+                    }
+
+                station to trains
+            }
+                .toMap()
+                .also {
+                    logging.debug("returning from getUpcoming trains")
                 }
-
-            station to trains
         }
-            .let { Result.success(it.toMap()) }
+            .onFailure {
+                logging.warn("error", it)
+            }
     }
 }

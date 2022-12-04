@@ -46,6 +46,7 @@ class WidgetUpdater @Inject internal constructor(
 ) {
 
     private suspend fun getGlanceIds(): List<GlanceId> {
+        logging.debug("getting glance ids")
         return glanceIdProvider.getGlanceIds(DepartureBoardWidget::class.java)
     }
 
@@ -69,7 +70,25 @@ class WidgetUpdater @Inject internal constructor(
         return kotlin.runCatching { jobToJoin.job.await() }.getOrDefault(false)
     }
 
+    suspend fun failRefreshingWidgets() {
+        updateAndRefreshEachWidget { previousData ->
+            if (previousData != null && !previousData.isLoading) {
+                return@updateAndRefreshEachWidget previousData
+            }
+            val baseData = previousData ?: DepartureBoardWidgetData()
+            baseData.copy(
+                lastRefresh = LastRefreshData(
+                    bootTimestampProvider.now(),
+                    wasSuccess = false,
+                    hadInternet = isOnline
+                ),
+                isLoading = false,
+            )
+        }
+    }
+
     private suspend fun updateDataInner(): Boolean {
+        logging.debug("updateDataInner")
         var useClosestStation = false
         var isInitialDataLoad = false
         val stationsToCheck = mutableSetOf<String>()
@@ -134,6 +153,8 @@ class WidgetUpdater @Inject internal constructor(
                     }
                 }
                 .toList()
+
+        logging.debug("Finished getting trains from train data manager")
 
         // Update each widget with the data we just loaded.
         val now = bootTimestampProvider.now()
