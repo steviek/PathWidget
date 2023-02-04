@@ -1,12 +1,19 @@
 package com.sixbynine.transit.path.widget
 
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.content.Context
+import android.os.Build.VERSION
+import androidx.annotation.StringRes
+import androidx.core.app.NotificationCompat
 import androidx.hilt.work.HiltWorker
 import androidx.work.BackoffPolicy.EXPONENTIAL
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy.KEEP
 import androidx.work.ExistingWorkPolicy.REPLACE
+import androidx.work.ForegroundInfo
 import androidx.work.NetworkType.UNMETERED
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST
@@ -14,6 +21,7 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import androidx.work.await
+import com.sixbynine.transit.path.R
 import com.sixbynine.transit.path.ktx.minutes
 import com.sixbynine.transit.path.logging.Logging
 import dagger.assisted.Assisted
@@ -41,6 +49,10 @@ class WidgetRefreshWorker @AssistedInject constructor(
             logging.debug("Widget refresh failed, retrying eventually")
             Result.retry()
         }
+    }
+
+    override suspend fun getForegroundInfo(): ForegroundInfo {
+        return UpdateNotifications.createForegroundInfo(applicationContext)
     }
 }
 

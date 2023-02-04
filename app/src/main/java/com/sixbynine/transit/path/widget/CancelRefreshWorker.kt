@@ -3,6 +3,7 @@ package com.sixbynine.transit.path.widget
 import android.content.Context
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
+import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import com.sixbynine.transit.path.logging.Logging
 import dagger.assisted.Assisted
@@ -20,5 +21,9 @@ class CancelRefreshWorker @AssistedInject constructor(
         logging.debug("Cancelling widgets that are still refreshing")
         widgetUpdater.failRefreshingWidgets()
         return Result.success()
+    }
+
+    override suspend fun getForegroundInfo(): ForegroundInfo {
+        return UpdateNotifications.createForegroundInfo(applicationContext)
     }
 }

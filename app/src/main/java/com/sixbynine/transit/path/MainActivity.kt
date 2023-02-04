@@ -129,10 +129,6 @@ class MainActivity : AppCompatActivity() {
 
                     Spacer(modifier = Modifier.weight(1f))
 
-                    TextButton(onClick = { openPathApiGithub() }) {
-                        Text(stringResource(R.string.credit), textAlign = TextAlign.Center)
-                    }
-
                     TextButton(onClick = { sendReportEmailIntent() }) {
                         Text(stringResource(R.string.report_problem), textAlign = TextAlign.Center)
                     }

@@ -5,7 +5,6 @@ import android.os.Build.VERSION
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
@@ -34,6 +33,7 @@ import androidx.glance.visibility
 import com.sixbynine.transit.path.R.drawable
 import com.sixbynine.transit.path.R.string
 import com.sixbynine.transit.path.ktx.drawableBackground
+import com.sixbynine.transit.path.ktx.stringResource
 import dagger.hilt.EntryPoint
 import dagger.hilt.EntryPoints
 import dagger.hilt.InstallIn

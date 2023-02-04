@@ -1,7 +1,10 @@
 package com.sixbynine.transit.path.ktx
 
 import androidx.annotation.ColorInt
+import androidx.annotation.StringRes
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.glance.LocalContext
 
 fun @receiver:ColorInt Int.toColor(): Color {
     return Color(
@@ -10,4 +13,14 @@ fun @receiver:ColorInt Int.toColor(): Color {
         blue = android.graphics.Color.blue(this),
         alpha = android.graphics.Color.alpha(this)
     )
+}
+
+@Composable
+fun stringResource(@StringRes id: Int) : String {
+    return LocalContext.current.getString(id)
+}
+
+@Composable
+fun stringResource(@StringRes id: Int, vararg args: Any) : String {
+    return LocalContext.current.getString(id, *args)
 }

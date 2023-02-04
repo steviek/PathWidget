@@ -6,9 +6,9 @@ plugins {
   id("dagger.hilt.android.plugin")
 }
 
-val composeVersion = "1.1.0-beta03"
+val composeVersion = "1.3.1"
 val glanceVersion = "1.0.0-alpha02"
-val hiltVersion = "2.40.5"
+val hiltVersion = "2.44.2"
 val hiltWorkVersion = "1.0.0"
 val roomVersion = "2.4.1"
 val workVersion = "2.7.1"
@@ -21,8 +21,8 @@ android {
     applicationId = "com.sixbynine.transit.path"
     minSdk = 24
     targetSdk = 33
-    versionCode = 12
-    versionName = "2022.13.03"
+    versionCode = 13
+    versionName = "2023.02.04"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
@@ -58,6 +58,7 @@ android {
       isIncludeAndroidResources = true
     }
   }
+    namespace = "com.sixbynine.transit.path"
 }
 
 dependencies {
