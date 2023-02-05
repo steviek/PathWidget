@@ -10,43 +10,43 @@ import javax.inject.Inject
 
 @Composable
 private fun DarkColorPalette() = with(AppColors()) {
-  darkColors(
-    primary = PathBlue200,
-    primaryVariant = PathBlue700,
-    secondary = PathBlue200
-  )
+    darkColors(
+        primary = PathBlue200,
+        primaryVariant = PathBlue700,
+        secondary = PathBlue200
+    )
 }
 
 @Composable
 private fun LightColorPalette() = with(AppColors()) {
-  lightColors(
-    primary = PathBlue500,
-    primaryVariant = PathBlue700,
-    secondary = PathBlue200
+    lightColors(
+        primary = PathBlue500,
+        primaryVariant = PathBlue700,
+        secondary = PathBlue200
 
-    /* Other default colors to override
-      background = Color.White,
-      surface = Color.White,
-      onPrimary = Color.White,
-      onSecondary = Color.Black,
-      onBackground = Color.Black,
-      onSurface = Color.Black,
-      */
-  )
+        /* Other default colors to override
+          background = Color.White,
+          surface = Color.White,
+          onPrimary = Color.White,
+          onSecondary = Color.Black,
+          onBackground = Color.Black,
+          onSurface = Color.Black,
+          */
+    )
 }
 
 @Composable
 fun PathTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
-  val colors = if (darkTheme) {
-    DarkColorPalette()
-  } else {
-    LightColorPalette()
-  }
+    val colors = if (darkTheme) {
+        DarkColorPalette()
+    } else {
+        LightColorPalette()
+    }
 
-  MaterialTheme(
-    colors = colors,
-    typography = Typography,
-    shapes = Shapes,
-    content = content
-  )
+    MaterialTheme(
+        colors = colors,
+        typography = Typography,
+        shapes = Shapes,
+        content = content
+    )
 }

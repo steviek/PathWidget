@@ -12,22 +12,22 @@ import kotlin.math.ceil
 
 /** Best guess at how wide [text] is when drawn with [size]. */
 fun estimateTextWidth(context: Context, text: String, size: TextUnit): Dp {
-  val textView = TextView(context.asUiContext())
-  if (VERSION.SDK_INT >= 29) {
-    textView.setTextAppearance(android.R.style.Theme_DeviceDefault_DayNight)
-  }
-  require(size.isSp)
-  textView.textSize = size.value
-  return context.pxToDp(textView.paint.measureText(text))
+    val textView = TextView(context.asUiContext())
+    if (VERSION.SDK_INT >= 29) {
+        textView.setTextAppearance(android.R.style.Theme_DeviceDefault_DayNight)
+    }
+    require(size.isSp)
+    textView.textSize = size.value
+    return context.pxToDp(textView.paint.measureText(text))
 }
 
 private fun Context.asUiContext(): Context {
-  val displayManager = getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
-  val defaultDisplay = displayManager.getDisplay(Display.DEFAULT_DISPLAY)
-  return createDisplayContext(defaultDisplay)
+    val displayManager = getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
+    val defaultDisplay = displayManager.getDisplay(Display.DEFAULT_DISPLAY)
+    return createDisplayContext(defaultDisplay)
 }
 
 private fun Context.pxToDp(px: Float): Dp {
-  val density = resources.displayMetrics.density
-  return ceil(px / density).dp
+    val density = resources.displayMetrics.density
+    return ceil(px / density).dp
 }

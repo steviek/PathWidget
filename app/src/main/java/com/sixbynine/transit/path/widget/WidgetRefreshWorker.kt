@@ -1,59 +1,110 @@
 package com.sixbynine.transit.path.widget
 
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.content.Context
+import android.os.Build.VERSION
+import androidx.annotation.StringRes
+import androidx.core.app.NotificationCompat
 import androidx.hilt.work.HiltWorker
+import androidx.work.BackoffPolicy.EXPONENTIAL
 import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy.KEEP
+import androidx.work.ExistingWorkPolicy.REPLACE
+import androidx.work.ForegroundInfo
 import androidx.work.NetworkType.UNMETERED
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
-import androidx.work.WorkRequest
 import androidx.work.WorkerParameters
 import androidx.work.await
+import com.sixbynine.transit.path.R
 import com.sixbynine.transit.path.ktx.minutes
 import com.sixbynine.transit.path.logging.Logging
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import java.util.concurrent.TimeUnit.SECONDS
 import javax.inject.Inject
 
 @HiltWorker
 class WidgetRefreshWorker @AssistedInject constructor(
-  @Assisted context: Context,
-  @Assisted params: WorkerParameters,
-  private val widgetUpdater: WidgetUpdater,
-  private val logging: Logging
+    @Assisted context: Context,
+    @Assisted params: WorkerParameters,
+    private val widgetUpdater: WidgetUpdater,
+    private val widgetRefresher: WidgetRefreshWorkerScheduler,
+    private val logging: Logging
 ) : CoroutineWorker(context, params) {
-  override suspend fun doWork(): Result {
-    logging.debug("Start widget refresh worker")
-    widgetUpdater.updateData()
-    logging.debug("Finish widget refresh worker")
-    return Result.success()
-  }
+    override suspend fun doWork(): Result {
+        logging.debug("Start widget refresh worker")
+        widgetRefresher.scheduleFailRefreshWorker()
+        val updateSucceeded = widgetUpdater.updateData()
+        return if (updateSucceeded) {
+            logging.debug("Widget refresh succeeded")
+            widgetRefresher.cancelFailRefreshWorker()
+            Result.success()
+        } else {
+            logging.debug("Widget refresh failed, retrying eventually")
+            Result.retry()
+        }
+    }
+
+    override suspend fun getForegroundInfo(): ForegroundInfo {
+        return UpdateNotifications.createForegroundInfo(applicationContext)
+    }
 }
 
 class WidgetRefreshWorkerScheduler @Inject constructor(
-  private val workManager: WorkManager
+    private val workManager: WorkManager
 ) {
-  suspend fun schedulePeriodicRefresh() {
-    // Start off conservative, and only update periodically if on WiFi and the battery isn't low
-    // to save the user's data and battery life.
-    val constraints = Constraints.Builder()
-      .setRequiresBatteryNotLow(true)
-      .setRequiredNetworkType(UNMETERED)
-      .build()
-    val workRequest = PeriodicWorkRequestBuilder<WidgetRefreshWorker>(15.minutes)
-      .setConstraints(constraints)
-      .build()
-    workManager.enqueueUniquePeriodicWork(WORK_TAG, KEEP, workRequest).result.await()
-  }
+    private val constraints = Constraints.Builder()
+        .setRequiresBatteryNotLow(true)
+        .setRequiredNetworkType(UNMETERED)
+        .build()
 
-  suspend fun cancelPeriodicRefresh() {
-    workManager.cancelUniqueWork(WORK_TAG).result.await()
-  }
+    suspend fun schedulePeriodicRefresh() {
+        // Start off conservative, and only update periodically if on WiFi and the battery isn't low
+        // to save the user's data and battery life.
+        val workRequest = PeriodicWorkRequestBuilder<WidgetRefreshWorker>(15.minutes)
+            .setConstraints(constraints)
+            .setBackoffCriteria(EXPONENTIAL, 10, SECONDS)
+            .build()
+        workManager.enqueueUniquePeriodicWork(WORK_TAG, KEEP, workRequest).result.await()
+    }
 
-  private companion object {
-    const val WORK_TAG = "path_widget_refresh"
-  }
+    suspend fun cancelPeriodicRefresh() {
+        workManager.cancelUniqueWork(WORK_TAG).result.await()
+    }
+
+    suspend fun performOneTimeRefresh() {
+        val workRequest = OneTimeWorkRequestBuilder<WidgetRefreshWorker>()
+            .setBackoffCriteria(EXPONENTIAL, 10, SECONDS)
+            .setExpedited(/* policy = */ RUN_AS_NON_EXPEDITED_WORK_REQUEST)
+            .build()
+        workManager.enqueueUniqueWork(ONE_TIME_WORK_TAG, REPLACE, workRequest)
+            .result
+            .await()
+    }
+
+    suspend fun scheduleFailRefreshWorker() {
+        val workRequest = OneTimeWorkRequestBuilder<CancelRefreshWorker>()
+            .setInitialDelay(30, SECONDS)
+            .build()
+        workManager.enqueueUniqueWork(ONE_TIME_FAIL_WORK_TAG, REPLACE, workRequest)
+            .result
+            .await()
+    }
+
+    suspend fun cancelFailRefreshWorker() {
+        workManager.cancelUniqueWork(ONE_TIME_FAIL_WORK_TAG).result.await()
+    }
+
+    private companion object {
+        const val WORK_TAG = "path_widget_refresh"
+        const val ONE_TIME_WORK_TAG = "path_widget_refresh_one_time"
+        const val ONE_TIME_FAIL_WORK_TAG = "path_widget_fail_refresh_one_time"
+    }
 }
 

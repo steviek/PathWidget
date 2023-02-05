@@ -17,46 +17,51 @@ import kotlinx.serialization.encodeToString
 import javax.inject.Inject
 
 interface SavedWidgetDataManager {
-  suspend fun getWidgetData(id: GlanceId): DepartureBoardWidgetData?
+    suspend fun getWidgetData(id: GlanceId): DepartureBoardWidgetData?
 
-  /** Update the stored data for the widget with [id], and update its UI. */
-  suspend fun updateWidgetData(
-    id: GlanceId,
-    function: (DepartureBoardWidgetData?) -> DepartureBoardWidgetData
-  )
+    /** Update the stored data for the widget with [id], and update its UI. */
+    suspend fun updateWidgetData(
+        id: GlanceId,
+        function: (DepartureBoardWidgetData?) -> DepartureBoardWidgetData
+    )
 }
 
 class GlanceAppWidgetStateSavedWidgetDataManager @Inject constructor(
-  @ApplicationContext private val context: Context,
-  private val logging: Logging
+    @ApplicationContext private val context: Context,
+    private val logging: Logging
 ) : SavedWidgetDataManager {
-  override suspend fun getWidgetData(id: GlanceId): DepartureBoardWidgetData? {
-    val state = getAppWidgetState(context, PreferencesGlanceStateDefinition, id)
-    return state[DEPARTURE_WIDGET_PREFS_KEY]?.let {
-      JsonFormat.decodeFromString<DepartureBoardWidgetData>(it)
-    }
-  }
+    override suspend fun getWidgetData(id: GlanceId): DepartureBoardWidgetData? {
+        val state = getAppWidgetState(context, PreferencesGlanceStateDefinition, id)
 
-  override suspend fun updateWidgetData(
-    id: GlanceId,
-    function: (DepartureBoardWidgetData?) -> DepartureBoardWidgetData
-  ) {
-    logging.debug("update widget: $id")
-    val previousData = getWidgetData(id)
-    updateAppWidgetState(context, PreferencesGlanceStateDefinition, id) { newState ->
-      newState.toMutablePreferences()
-        .apply {
-          this[DEPARTURE_WIDGET_PREFS_KEY] = JsonFormat.encodeToString(function(previousData))
+        if (state[HAS_NEW_WIDGET_DATA_FORMAT] != true) return null
+
+        return state[DEPARTURE_WIDGET_PREFS_KEY]?.let {
+            JsonFormat.decodeFromString<DepartureBoardWidgetData>(it)
         }
     }
-  }
+
+    override suspend fun updateWidgetData(
+        id: GlanceId,
+        function: (DepartureBoardWidgetData?) -> DepartureBoardWidgetData
+    ) {
+        logging.debug("update widget: $id")
+        val previousData = getWidgetData(id)
+        updateAppWidgetState(context, PreferencesGlanceStateDefinition, id) { newState ->
+            newState.toMutablePreferences()
+                .apply {
+                    this[HAS_NEW_WIDGET_DATA_FORMAT] = true
+                    this[DEPARTURE_WIDGET_PREFS_KEY] =
+                        JsonFormat.encodeToString(function(previousData))
+                }
+        }
+    }
 }
 
 @InstallIn(SingletonComponent::class)
 @Module
 interface SavedWidgetDataManagerModule {
-  @Binds
-  fun bindSavedWidgetDataManager(
-    manager: GlanceAppWidgetStateSavedWidgetDataManager
-  ): SavedWidgetDataManager
+    @Binds
+    fun bindSavedWidgetDataManager(
+        manager: GlanceAppWidgetStateSavedWidgetDataManager
+    ): SavedWidgetDataManager
 }

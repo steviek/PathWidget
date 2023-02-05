@@ -4,7 +4,9 @@ This repo contains my Android App providing a widget for departures of the [PATH
 
 ## Libraries and technologies used
 
-This app would not be possible with [Matthew Razza's awesome free API](https://github.com/mrazza/path-data) for querying details about the PATH.
+The data source is the same as the RidePath app: https://www.panynj.gov/bin/portauthority/ridepath.json. 
+See also [Matthew Razza's API](https://github.com/mrazza/path-data), which may be useful depending on
+your use case.
 
 I also used these fabulous open source libraries:
 

@@ -6,23 +6,23 @@ plugins {
   id("dagger.hilt.android.plugin")
 }
 
-val composeVersion = "1.1.0-beta03"
+val composeVersion = "1.3.1"
 val glanceVersion = "1.0.0-alpha02"
-val hiltVersion = "2.40.5"
+val hiltVersion = "2.44.2"
 val hiltWorkVersion = "1.0.0"
 val roomVersion = "2.4.1"
 val workVersion = "2.7.1"
 
 android {
-  compileSdk = 31
-  buildToolsVersion = "30.0.3"
+  compileSdk = 33
+  buildToolsVersion = "33.0.0"
 
   defaultConfig {
     applicationId = "com.sixbynine.transit.path"
-    minSdk = 21
-    targetSdk = 31
-    versionCode = 9
-    versionName = "2022.02.01"
+    minSdk = 24
+    targetSdk = 33
+    versionCode = 13
+    versionName = "2023.02.04"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
@@ -41,7 +41,11 @@ android {
   kotlinOptions {
     jvmTarget = JavaVersion.VERSION_1_8.toString()
     freeCompilerArgs =
-      freeCompilerArgs + listOf("-Xopt-in=kotlinx.serialization.ExperimentalSerializationApi")
+      freeCompilerArgs + listOf(
+        "-Xopt-in=kotlinx.serialization.ExperimentalSerializationApi",
+        "-Xopt-in=kotlin.time.ExperimentalTime",
+        "-Xcontext-receivers"
+      )
   }
   buildFeatures {
     compose = true
@@ -54,6 +58,7 @@ android {
       isIncludeAndroidResources = true
     }
   }
+    namespace = "com.sixbynine.transit.path"
 }
 
 dependencies {

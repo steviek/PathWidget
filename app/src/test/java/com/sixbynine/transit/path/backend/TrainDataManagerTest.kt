@@ -14,7 +14,7 @@ import javax.inject.Inject
 class TrainDataManagerTest {
   @get:Rule val hiltRule = HiltAndroidRule(this)
 
-  @Inject lateinit var trainDataManager: DefaultTrainDataManager
+  @Inject lateinit var trainDataManager: TrainDataManager
 
   @Before
   fun setUp() {

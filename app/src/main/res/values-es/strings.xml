@@ -21,4 +21,6 @@
     <string name="background_location_permission_title">¿Permitir accesso a la ubicación todo el tiempo?</string>Which station is considered the closest will only change whe
     <string name="background_location_permission_message">Sin permiso de acceder a la ubicación todo el tiempo, el widget no poderia mantener cualquier estación es la más cercana, excepto por cuando pulsas el botón de recargar.\n\n¿Quieres dar permiso en Configuaración ahora?</string>
     <string name="background_location_permission_label_fallback">Permitir todo el tiempo</string>
+    <string name="channel_name_update">Actualizaciones</string>
+    <string name="update_notification_text">Actualizando el widget PATH…</string>
 </resources>

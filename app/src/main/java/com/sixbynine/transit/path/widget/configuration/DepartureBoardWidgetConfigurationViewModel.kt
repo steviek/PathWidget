@@ -24,72 +24,75 @@ import javax.inject.Inject
 
 @HiltViewModel
 class DepartureBoardWidgetConfigurationViewModel @Inject internal constructor(
-  // Pretty sure this doesn't leak a context...
-  @field:SuppressLint("StaticFieldLeak") @ApplicationContext private val context: Context,
-  private val dataManager: WidgetUpdater,
-  private val glanceAppWidgetManager: GlanceAppWidgetManager,
-  private val savedWidgetDataManager: SavedWidgetDataManager,
-  private val logging: Logging
-): ViewModel() {
+    // Pretty sure this doesn't leak a context...
+    @field:SuppressLint("StaticFieldLeak") @ApplicationContext private val context: Context,
+    private val dataManager: WidgetUpdater,
+    private val glanceAppWidgetManager: GlanceAppWidgetManager,
+    private val savedWidgetDataManager: SavedWidgetDataManager,
+    private val logging: Logging
+) : ViewModel() {
 
-  private val _previousData = MutableLiveData<DepartureBoardWidgetData?>(null)
-  private val _configurationComplete = MutableLiveData(false)
+    private val _previousData = MutableLiveData<DepartureBoardWidgetData?>(null)
+    private val _configurationComplete = MutableLiveData(false)
 
-  val previousData: LiveData<DepartureBoardWidgetData?>
-    get() = _previousData
+    val previousData: LiveData<DepartureBoardWidgetData?>
+        get() = _previousData
 
-  val configurationComplete: LiveData<Boolean>
-    get() = _configurationComplete
+    val configurationComplete: LiveData<Boolean>
+        get() = _configurationComplete
 
-  /**
-   * Loads the previous widget data if there was any, and publishes to [previousData] if any data
-   * was loaded.
-   */
-  fun loadPreviousData(appWidgetId: Int) = viewModelScope.launch {
-    val glanceId = getGlanceId(appWidgetId) ?: return@launch
-    val previousData = savedWidgetDataManager.getWidgetData(glanceId) ?: return@launch
-    _previousData.value = previousData
-  }
-
-  /**
-   * Updates the widget stations and whether to use the closest station for [appWidgetId]. Publishes
-   * to [configurationComplete] when the commit is complete.
-   */
-  fun applyWidgetConfiguration(
-    appWidgetId: Int,
-    stations: Set<String>,
-    useClosestStation: Boolean
-  ) = viewModelScope.launch {
-    val glanceId = getGlanceId(appWidgetId)
-    if (glanceId == null) {
-      // This shouldn't really ever happen.
-      logging.warn("Couldn't get glance id for $appWidgetId")
-      dataManager.updateData()
-      _configurationComplete.value = true
-      return@launch
+    /**
+     * Loads the previous widget data if there was any, and publishes to [previousData] if any data
+     * was loaded.
+     */
+    fun loadPreviousData(appWidgetId: Int) = viewModelScope.launch {
+        val glanceId = getGlanceId(appWidgetId) ?: return@launch
+        val previousData = savedWidgetDataManager.getWidgetData(glanceId) ?: return@launch
+        _previousData.value = previousData
     }
 
-    savedWidgetDataManager.updateWidgetData(glanceId) { previousData ->
-      when (previousData) {
-        null -> DepartureBoardWidgetData(
-          fixedStations = stations,
-          useClosestStation = useClosestStation
+    /**
+     * Updates the widget stations and whether to use the closest station for [appWidgetId]. Publishes
+     * to [configurationComplete] when the commit is complete.
+     */
+    fun applyWidgetConfiguration(
+        appWidgetId: Int,
+        stations: Set<String>,
+        useClosestStation: Boolean
+    ) = viewModelScope.launch {
+        val glanceId = getGlanceId(appWidgetId)
+        if (glanceId == null) {
+            // This shouldn't really ever happen.
+            logging.warn("Couldn't get glance id for $appWidgetId")
+            dataManager.updateData()
+            _configurationComplete.value = true
+            return@launch
+        }
+
+        savedWidgetDataManager.updateWidgetData(glanceId) { previousData ->
+            when (previousData) {
+                null -> DepartureBoardWidgetData(
+                    fixedStations = stations,
+                    useClosestStation = useClosestStation
+                )
+                else -> previousData.copy(
+                    fixedStations = stations,
+                    useClosestStation = useClosestStation
+                )
+            }
+        }
+
+        // Send a broadcast to update the widget to avoid blocking the configuration activity on the
+        // update. This would be better done via WorkManager to avoid the broadcast queue.
+        context.sendBroadcast(
+            Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE)
+                .setClass(context, DepartureBoardWidgetReceiver::class.java)
+                .putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, intArrayOf(appWidgetId))
         )
-        else -> previousData.copy(fixedStations = stations, useClosestStation = useClosestStation)
-      }
+        _configurationComplete.value = true
     }
 
-    // Send a broadcast to update the widget to avoid blocking the configuration activity on the
-    // update. This would be better done via WorkManager to avoid the broadcast queue.
-    context.sendBroadcast(
-      Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE)
-        .setClass(context, DepartureBoardWidgetReceiver::class.java)
-        .putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, intArrayOf(appWidgetId))
-    )
-    _configurationComplete.value = true
-  }
-
-  private suspend fun getGlanceId(appWidgetId: Int): GlanceId? {
-    return glanceAppWidgetManager.getGlanceId<DepartureBoardWidget>(appWidgetId)
-  }
+    private suspend fun getGlanceId(appWidgetId: Int): GlanceId? {
+        return glanceAppWidgetManager.getGlanceId<DepartureBoardWidget>(appWidgetId)
+    }
 }

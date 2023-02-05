@@ -55,231 +55,229 @@ import javax.inject.Inject
 @AndroidEntryPoint
 class DepartureBoardWidgetConfigurationActivity : AppCompatActivity() {
 
-  @Inject
-  lateinit var stationLister: StationLister
+    @Inject
+    lateinit var permissionHelper: PermissionHelper
 
-  @Inject
-  lateinit var permissionHelper: PermissionHelper
+    @Inject
+    lateinit var logging: Logging
 
-  @Inject
-  lateinit var logging: Logging
+    private val viewModel: DepartureBoardWidgetConfigurationViewModel by viewModels()
 
-  private val viewModel: DepartureBoardWidgetConfigurationViewModel by viewModels()
+    private var wasPermissionRequestRejected = false
+    private var previousData: DepartureBoardWidgetData? = null
+    private var loadedFromPreviousData = false
+    private lateinit var locationPermissionRequest: ActivityResultLauncher<Array<String>>
+    private lateinit var backgroundLocationPermissionRequest: ActivityResultLauncher<Array<String>>
 
-  private var wasPermissionRequestRejected = false
-  private var previousData: DepartureBoardWidgetData? = null
-  private var loadedFromPreviousData = false
-  private lateinit var locationPermissionRequest: ActivityResultLauncher<Array<String>>
-  private lateinit var backgroundLocationPermissionRequest: ActivityResultLauncher<Array<String>>
+    private val appWidgetId: Int
+        get() = intent?.extras?.getInt(EXTRA_APPWIDGET_ID, INVALID_APPWIDGET_ID)
+            ?: INVALID_APPWIDGET_ID
 
-  private val appWidgetId: Int
-    get() = intent?.extras?.getInt(EXTRA_APPWIDGET_ID, INVALID_APPWIDGET_ID) ?: INVALID_APPWIDGET_ID
+    private val prefs: SharedPreferences
+        get() = getSharedPreferences("configuration_settings", Context.MODE_PRIVATE)
 
-  private val prefs: SharedPreferences
-    get() = getSharedPreferences("configuration_settings", Context.MODE_PRIVATE)
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
 
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
-
-    // Callback for requesting location permission when the user chooses the closest station option.
-    locationPermissionRequest =
-      registerForActivityResult(RequestMultiplePermissions()) { permissions ->
-        val wasPermissionGranted =
-          permissions[ACCESS_FINE_LOCATION] == true || permissions[ACCESS_COARSE_LOCATION] == true
-        if (wasPermissionGranted) {
-          // The user can use the widget without background location access, but they should be
-          // notified about it.
-          checkBackgroundLocationPermission()
-        } else {
-          wasPermissionRequestRejected = true
-          composeContent()
-        }
-      }
-
-    backgroundLocationPermissionRequest =
-      registerForActivityResult(RequestMultiplePermissions()) { permissions ->
-        val wasPermissionGranted = permissions[ACCESS_BACKGROUND_LOCATION] == true
-        logging.debug("Background location permission granted: $wasPermissionGranted")
-      }
-
-    loadDataAndComposeContent()
-  }
-
-  override fun onNewIntent(intent: Intent?) {
-    super.onNewIntent(intent)
-    loadDataAndComposeContent()
-  }
-
-  private fun loadDataAndComposeContent() {
-    // Load the previously configured data for the widget to cover the reconfiguration case.
-    viewModel.previousData.removeObservers(this)
-    viewModel.previousData.observe(this) {
-      previousData = it
-      composeContent()
-    }
-    viewModel.loadPreviousData(appWidgetId)
-
-    composeContent()
-  }
-
-  private fun composeContent() = setContent {
-    PathTheme {
-      Surface(color = MaterialTheme.colors.background) {
-        Column(
-          modifier = Modifier
-            .verticalScroll(rememberScrollState())
-        ) {
-          Spacer(modifier = Modifier.height(16.dp))
-
-          Text(
-            modifier = Modifier.padding(horizontal = 16.dp),
-            text = stringResource(R.string.choose_stations_configuration)
-          )
-
-          var useClosestStation by remember { mutableStateOf(false) }
-          if (useClosestStation && wasPermissionRequestRejected) {
-            // If they clicked "use closest station" and then denied a permission request, uncheck
-            // the box...
-            useClosestStation = false
-            wasPermissionRequestRejected = false
-          }
-
-          CheckBoxRow(
-            isChecked = useClosestStation,
-            text = stringResource(R.string.closest_station),
-            onCheckedChange = {
-              useClosestStation = !useClosestStation
-              if (useClosestStation) {
-                val dialogShown = checkLocationPermission()
-                if (!dialogShown) checkBackgroundLocationPermission()
-              }
-            }
-          )
-
-          Text(
-            modifier = Modifier
-              .padding(vertical = 8.dp)
-              .padding(start = 64.dp),
-            text = stringResource(R.string.and_or),
-          )
-
-          var selectedStations by remember { mutableStateOf(emptySet<String>()) }
-          stationLister
-            .getStations()
-            .distinctBy { it.apiName }
-            .sortedWith(StationByDisplayNameComparator)
-            .forEach { station ->
-              CheckBoxRow(
-                isChecked = station.apiName in selectedStations,
-                text = station.displayName,
-                onCheckedChange = { isChecked ->
-                  selectedStations = if (isChecked) {
-                    selectedStations + station.apiName
-                  } else {
-                    selectedStations - station.apiName
-                  }
+        // Callback for requesting location permission when the user chooses the closest station option.
+        locationPermissionRequest =
+            registerForActivityResult(RequestMultiplePermissions()) { permissions ->
+                val wasPermissionGranted =
+                    permissions[ACCESS_FINE_LOCATION] == true || permissions[ACCESS_COARSE_LOCATION] == true
+                if (wasPermissionGranted) {
+                    // The user can use the widget without background location access, but they should be
+                    // notified about it.
+                    checkBackgroundLocationPermission()
+                } else {
+                    wasPermissionRequestRejected = true
+                    composeContent()
                 }
-              )
             }
 
-          if (previousData != null && !loadedFromPreviousData) {
-            // Check the previously checked boxes when we're reconfiguring. This is async but loads
-            // really quickly, so this should (hopefully) happen before the user can notice or start
-            // clicking things.
-            loadedFromPreviousData = true
-            useClosestStation = previousData?.useClosestStation ?: false
-            selectedStations = previousData?.fixedStations ?: emptySet()
-          }
-
-          Row(
-            modifier = Modifier
-              .padding(horizontal = 16.dp)
-              .fillMaxWidth(),
-            horizontalArrangement = Arrangement.End
-          ) {
-            Button(
-              onClick = { confirmWidgetUpdate(selectedStations, useClosestStation) },
-              enabled = selectedStations.isNotEmpty() || useClosestStation
-            ) {
-              Text(text = stringResource(R.string.confirm))
+        backgroundLocationPermissionRequest =
+            registerForActivityResult(RequestMultiplePermissions()) { permissions ->
+                val wasPermissionGranted = permissions[ACCESS_BACKGROUND_LOCATION] == true
+                logging.debug("Background location permission granted: $wasPermissionGranted")
             }
-          }
 
-          Spacer(modifier = Modifier.height(16.dp))
+        loadDataAndComposeContent()
+    }
+
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        loadDataAndComposeContent()
+    }
+
+    private fun loadDataAndComposeContent() {
+        // Load the previously configured data for the widget to cover the reconfiguration case.
+        viewModel.previousData.removeObservers(this)
+        viewModel.previousData.observe(this) {
+            previousData = it
+            composeContent()
         }
-      }
-    }
-  }
+        viewModel.loadPreviousData(appWidgetId)
 
-  @Composable
-  private fun CheckBoxRow(isChecked: Boolean, text: String, onCheckedChange: (Boolean) -> Unit) {
-    Row(
-      modifier = Modifier.padding(horizontal = 16.dp),
-      verticalAlignment = Alignment.CenterVertically
-    ) {
-      Checkbox(checked = isChecked, onCheckedChange = { onCheckedChange(it) })
-      Text(text = text, modifier = Modifier.clickable { onCheckedChange(!isChecked) })
-    }
-  }
-
-  private fun confirmWidgetUpdate(stations: Set<String>, useClosestStation: Boolean) {
-    viewModel.configurationComplete.observe(this) { isComplete ->
-      if (!isComplete) return@observe
-      // If the configuration completed, then we can confirm that the widget is set up.
-      val resultValue = Intent().putExtra(EXTRA_APPWIDGET_ID, appWidgetId)
-      setResult(RESULT_OK, resultValue)
-      finish()
+        composeContent()
     }
 
-    viewModel.applyWidgetConfiguration(appWidgetId, stations, useClosestStation)
-  }
+    private fun composeContent() = setContent {
+        PathTheme {
+            Surface(color = MaterialTheme.colors.background) {
+                Column(
+                    modifier = Modifier
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    Spacer(modifier = Modifier.height(16.dp))
 
-  private fun checkLocationPermission(): Boolean {
-    if (VERSION.SDK_INT < 23) {
-      return false
+                    Text(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        text = stringResource(R.string.choose_stations_configuration)
+                    )
+
+                    var useClosestStation by remember { mutableStateOf(false) }
+                    if (useClosestStation && wasPermissionRequestRejected) {
+                        // If they clicked "use closest station" and then denied a permission request, uncheck
+                        // the box...
+                        useClosestStation = false
+                        wasPermissionRequestRejected = false
+                    }
+
+                    CheckBoxRow(
+                        isChecked = useClosestStation,
+                        text = stringResource(R.string.closest_station),
+                        onCheckedChange = {
+                            useClosestStation = !useClosestStation
+                            if (useClosestStation) {
+                                val dialogShown = checkLocationPermission()
+                                if (!dialogShown) checkBackgroundLocationPermission()
+                            }
+                        }
+                    )
+
+                    Text(
+                        modifier = Modifier
+                          .padding(vertical = 8.dp)
+                          .padding(start = 64.dp),
+                        text = stringResource(R.string.and_or),
+                    )
+
+                    var selectedStations by remember { mutableStateOf(emptySet<String>()) }
+                    StationLister
+                        .getStations()
+                        .distinctBy { it.mRazzaApiName }
+                        .sortedWith(StationByDisplayNameComparator)
+                        .forEach { station ->
+                            CheckBoxRow(
+                                isChecked = station.mRazzaApiName in selectedStations,
+                                text = station.displayName,
+                                onCheckedChange = { isChecked ->
+                                    selectedStations = if (isChecked) {
+                                        selectedStations + station.mRazzaApiName
+                                    } else {
+                                        selectedStations - station.mRazzaApiName
+                                    }
+                                }
+                            )
+                        }
+
+                    if (previousData != null && !loadedFromPreviousData) {
+                        // Check the previously checked boxes when we're reconfiguring. This is async but loads
+                        // really quickly, so this should (hopefully) happen before the user can notice or start
+                        // clicking things.
+                        loadedFromPreviousData = true
+                        useClosestStation = previousData?.useClosestStation ?: false
+                        selectedStations = previousData?.fixedStations ?: emptySet()
+                    }
+
+                    Row(
+                        modifier = Modifier
+                          .padding(horizontal = 16.dp)
+                          .fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        Button(
+                            onClick = { confirmWidgetUpdate(selectedStations, useClosestStation) },
+                            enabled = selectedStations.isNotEmpty() || useClosestStation
+                        ) {
+                            Text(text = stringResource(R.string.confirm))
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+            }
+        }
     }
-    if (permissionHelper.hasLocationPermission()) return false
 
-    locationPermissionRequest.launch(permissionHelper.locationPermissions)
-    return true
-  }
-
-  private fun checkBackgroundLocationPermission(): Boolean {
-    if (permissionHelper.hasBackgroundLocationPermission()) return false
-
-    val backgroundPermissionLabel = if (VERSION.SDK_INT >= 30) {
-      packageManager.backgroundPermissionOptionLabel
-    } else {
-      getString(R.string.background_location_permission_label_fallback)
+    @Composable
+    private fun CheckBoxRow(isChecked: Boolean, text: String, onCheckedChange: (Boolean) -> Unit) {
+        Row(
+            modifier = Modifier.padding(horizontal = 16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Checkbox(checked = isChecked, onCheckedChange = { onCheckedChange(it) })
+            Text(text = text, modifier = Modifier.clickable { onCheckedChange(!isChecked) })
+        }
     }
 
-    val dialogMessage =
-      getString(R.string.background_location_permission_message, backgroundPermissionLabel)
+    private fun confirmWidgetUpdate(stations: Set<String>, useClosestStation: Boolean) {
+        viewModel.configurationComplete.observe(this) { isComplete ->
+            if (!isComplete) return@observe
+            // If the configuration completed, then we can confirm that the widget is set up.
+            val resultValue = Intent().putExtra(EXTRA_APPWIDGET_ID, appWidgetId)
+            setResult(RESULT_OK, resultValue)
+            finish()
+        }
 
-    AlertDialog.Builder(this)
-      .setTitle(R.string.background_location_permission_title)
-      .setMessage(dialogMessage)
-      .setPositiveButton(android.R.string.ok) { _, _ ->
-        if (prefs.getBoolean(KeyBackgroundLocationRequested, false)) {
-          // If we've already asked, the API will just reject us immediately 🙄. Do the next
-          // best thing and send them to our settings page.
-          val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
-          intent.data = Uri.fromParts("package", packageName, null)
-          startActivity(intent)
+        viewModel.applyWidgetConfiguration(appWidgetId, stations, useClosestStation)
+    }
+
+    private fun checkLocationPermission(): Boolean {
+        if (VERSION.SDK_INT < 23) {
+            return false
+        }
+        if (permissionHelper.hasLocationPermission()) return false
+
+        locationPermissionRequest.launch(permissionHelper.locationPermissions)
+        return true
+    }
+
+    private fun checkBackgroundLocationPermission(): Boolean {
+        if (permissionHelper.hasBackgroundLocationPermission()) return false
+
+        val backgroundPermissionLabel = if (VERSION.SDK_INT >= 30) {
+            packageManager.backgroundPermissionOptionLabel
         } else {
-          // If we've never asked before, then use the background location permission request,
-          // which goes directly to location settings.
-          backgroundLocationPermissionRequest.launch(permissionHelper.backgroundLocationPermissions)
-          prefs.edit().putBoolean(KeyBackgroundLocationRequested, true).apply()
+            getString(R.string.background_location_permission_label_fallback)
         }
-      }
-      .setNegativeButton(android.R.string.cancel, null)
-      .create()
-      .show()
-    return true
-  }
 
-  private companion object {
-    const val KeyBackgroundLocationRequested = "background_location_requested"
-  }
+        val dialogMessage =
+            getString(R.string.background_location_permission_message, backgroundPermissionLabel)
+
+        AlertDialog.Builder(this)
+            .setTitle(R.string.background_location_permission_title)
+            .setMessage(dialogMessage)
+            .setPositiveButton(android.R.string.ok) { _, _ ->
+                if (prefs.getBoolean(KeyBackgroundLocationRequested, false)) {
+                    // If we've already asked, the API will just reject us immediately 🙄. Do the next
+                    // best thing and send them to our settings page.
+                    val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                    intent.data = Uri.fromParts("package", packageName, null)
+                    startActivity(intent)
+                } else {
+                    // If we've never asked before, then use the background location permission request,
+                    // which goes directly to location settings.
+                    backgroundLocationPermissionRequest.launch(permissionHelper.backgroundLocationPermissions)
+                    prefs.edit().putBoolean(KeyBackgroundLocationRequested, true).apply()
+                }
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .create()
+            .show()
+        return true
+    }
+
+    private companion object {
+        const val KeyBackgroundLocationRequested = "background_location_requested"
+    }
 }
